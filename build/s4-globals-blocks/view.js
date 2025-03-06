@@ -1,4 +1,4 @@
-/******/ (() => { // webpackBootstrap
+var __webpack_exports__ = {};
 /*!***************************************!*\
   !*** ./src/s4-globals-blocks/view.js ***!
   \***************************************/
@@ -24,9 +24,25 @@
  * @see https://developer.wordpress.org/block-editor/reference-guides/block-api/block-metadata/#view-script
  */
 
-/* eslint-disable no-console */
-console.log('Hello World! (from s4-globals-blocks-s4-globals-blocks block)');
-/* eslint-enable no-console */
-/******/ })()
-;
+// import jQuery from "jquery";
+
+// document.addEventListener("DOMContentLoaded", () => {
+// 	jQuery(".owl-carousel").owlCarousel({
+// 		loop: true,
+// 		margin: 10,
+// 		nav: true,
+// 		responsive: {
+// 			0: {
+// 				items: 1,
+// 			},
+// 			600: {
+// 				items: 3,
+// 			},
+// 			1000: {
+// 				items: 5,
+// 			},
+// 		},
+// 	});
+// });
+
 //# sourceMappingURL=view.js.map
