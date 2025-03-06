@@ -68,15 +68,14 @@ function Edit({
   attributes,
   setAttributes
 }) {
-  const {
-    images
-  } = attributes;
+  // Assurez-vous que `images` est toujours un tableau
+  const images = attributes.images || [];
   const onSelectImages = newImages => {
     setAttributes({
       images: newImages.map(image => ({
         id: image.id,
         url: image.url,
-        alt: image.alt
+        alt: image.alt || "" // Assurez-vous que `alt` est défini
       }))
     });
   };
