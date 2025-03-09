@@ -4,3 +4,62 @@
  *
  * Replace them with your own styles or remove the file completely.
  */
+
+.s4_block_carousel {
+    margin: 20px 0;
+
+    .owl-carousel {
+        .owl-item {
+            img {
+                width: 100%;
+                height: auto;
+                object-fit: cover;
+            }
+        }
+
+        .owl-nav {
+            position: absolute;
+            top: 50%;
+            width: 100%;
+            transform: translateY(-50%);
+            margin-top: 0;
+
+            button.owl-prev,
+            button.owl-next {
+                position: absolute;
+                background: rgba(255, 255, 255, 0.7) !important;
+                color: #000 !important;
+                padding: 10px !important;
+                border-radius: 50%;
+                font-size: 20px;
+                
+                &:hover {
+                    background: rgba(255, 255, 255, 0.9) !important;
+                }
+            }
+
+            button.owl-prev {
+                left: 10px;
+            }
+
+            button.owl-next {
+                right: 10px;
+            }
+        }
+
+        .owl-dots {
+            margin-top: 10px;
+            
+            .owl-dot {
+                span {
+                    background: #D6D6D6;
+                }
+                
+                &.active span,
+                &:hover span {
+                    background: #869791;
+                }
+            }
+        }
+    }
+}

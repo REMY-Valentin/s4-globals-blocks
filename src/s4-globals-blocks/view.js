@@ -20,23 +20,23 @@
  * @see https://developer.wordpress.org/block-editor/reference-guides/block-api/block-metadata/#view-script
  */
 
-// import jQuery from "jquery";
+import jQuery from "jquery";
 
-// document.addEventListener("DOMContentLoaded", () => {
-// 	jQuery(".owl-carousel").owlCarousel({
-// 		loop: true,
-// 		margin: 10,
-// 		nav: true,
-// 		responsive: {
-// 			0: {
-// 				items: 1,
-// 			},
-// 			600: {
-// 				items: 3,
-// 			},
-// 			1000: {
-// 				items: 5,
-// 			},
-// 		},
-// 	});
-// });
+jQuery(document).ready(function($) {
+	$('.owl-carousel').owlCarousel({
+		loop: true,
+		margin: 10,
+		nav: true,
+		responsive: {
+			0: {
+				items: 1
+			},
+			600: {
+				items: 2
+			},
+			1000: {
+				items: 3
+			}
+		}
+	});
+});

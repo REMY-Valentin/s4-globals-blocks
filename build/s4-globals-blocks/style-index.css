@@ -7,5 +7,49 @@
  *
  * Replace them with your own styles or remove the file completely.
  */
+.s4_block_carousel {
+  margin: 20px 0;
+}
+.s4_block_carousel .owl-carousel .owl-item img {
+  width: 100%;
+  height: auto;
+  -o-object-fit: cover;
+     object-fit: cover;
+}
+.s4_block_carousel .owl-carousel .owl-nav {
+  position: absolute;
+  top: 50%;
+  width: 100%;
+  transform: translateY(-50%);
+  margin-top: 0;
+}
+.s4_block_carousel .owl-carousel .owl-nav button.owl-prev,
+.s4_block_carousel .owl-carousel .owl-nav button.owl-next {
+  position: absolute;
+  background: rgba(255, 255, 255, 0.7) !important;
+  color: #000 !important;
+  padding: 10px !important;
+  border-radius: 50%;
+  font-size: 20px;
+}
+.s4_block_carousel .owl-carousel .owl-nav button.owl-prev:hover,
+.s4_block_carousel .owl-carousel .owl-nav button.owl-next:hover {
+  background: rgba(255, 255, 255, 0.9) !important;
+}
+.s4_block_carousel .owl-carousel .owl-nav button.owl-prev {
+  left: 10px;
+}
+.s4_block_carousel .owl-carousel .owl-nav button.owl-next {
+  right: 10px;
+}
+.s4_block_carousel .owl-carousel .owl-dots {
+  margin-top: 10px;
+}
+.s4_block_carousel .owl-carousel .owl-dots .owl-dot span {
+  background: #D6D6D6;
+}
+.s4_block_carousel .owl-carousel .owl-dots .owl-dot.active span, .s4_block_carousel .owl-carousel .owl-dots .owl-dot:hover span {
+  background: #869791;
+}
 
 /*# sourceMappingURL=style-index.css.map*/
