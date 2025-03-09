@@ -8,6 +8,26 @@
 	"icon": "vault",
 	"description": "Example block scaffolded with Create Block tool.",
 	"example": {},
+	"attributes": {
+		"images": {
+			"type": "array",
+			"default": [],
+			"items": {
+				"type": "object",
+				"properties": {
+					"id": {
+						"type": "number"
+					},
+					"url": {
+						"type": "string"
+					},
+					"alt": {
+						"type": "string"
+					}
+				}
+			}
+		}
+	},
 	"supports": {
 		"interactivity": true
 	},

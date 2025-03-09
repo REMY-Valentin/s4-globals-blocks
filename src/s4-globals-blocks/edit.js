@@ -15,7 +15,6 @@ import {
 	useBlockProps,
 	MediaUpload,
 	MediaUploadCheck,
-	RichText,
 } from "@wordpress/block-editor";
 
 /**

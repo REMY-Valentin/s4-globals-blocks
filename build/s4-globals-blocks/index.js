@@ -8,7 +8,7 @@
   \******************************************/
 /***/ ((module) => {
 
-module.exports = /*#__PURE__*/JSON.parse('{"$schema":"https://schemas.wp.org/trunk/block.json","apiVersion":3,"name":"s4-globals-blocks/s4-globals-blocks","version":"0.1.0","title":"S4 globals blocks","category":"theme","icon":"vault","description":"Example block scaffolded with Create Block tool.","example":{},"supports":{"interactivity":true},"textdomain":"s4-globals-blocks","editorScript":"file:./index.js","editorStyle":"file:./index.css","style":"file:./style-index.css","render":"file:./render.php","viewScriptModule":"file:./view.js"}');
+module.exports = /*#__PURE__*/JSON.parse('{"$schema":"https://schemas.wp.org/trunk/block.json","apiVersion":3,"name":"s4-globals-blocks/s4-globals-blocks","version":"0.1.0","title":"S4 globals blocks","category":"theme","icon":"vault","description":"Example block scaffolded with Create Block tool.","example":{},"attributes":{"images":{"type":"array","default":[],"items":{"type":"object","properties":{"id":{"type":"number"},"url":{"type":"string"},"alt":{"type":"string"}}}}},"supports":{"interactivity":true},"textdomain":"s4-globals-blocks","editorScript":"file:./index.js","editorStyle":"file:./index.css","style":"file:./style-index.css","render":"file:./render.php","viewScriptModule":"file:./view.js"}');
 
 /***/ }),
 
