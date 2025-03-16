@@ -15,7 +15,4 @@
 
 if (!defined('ABSPATH')) {
 	exit; // Exit if accessed directly.
-}
-
-// Include initialization file
-require_once plugin_dir_path(__FILE__) . 'init.php'; 
+} 

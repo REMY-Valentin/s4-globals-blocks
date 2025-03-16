@@ -34,7 +34,8 @@
 	"textdomain": "s4-globals-blocks",
 	"editorScript": "file:./index.js",
 	"editorStyle": "file:./index.css",
-	"style": "file:./style-index.css",
+	"style": ["file:./style-index.css", "file:./assets/assets/owl.carousel.min.css", "file:./assets/assets/owl.theme.default.min.css"],
 	"render": "file:./render.php",
-	"viewScriptModule": "file:./view.js"
+	"viewScript": ["file:./view.js", "file:./assets/owl.carousel.min.js"],
+	"script": ["jquery"]
 }

@@ -20,6 +20,7 @@ if (!empty($block->align)) {
     $class_name .= ' align' . esc_attr($block->align);
 }
 
+
 // Afficher le carrousel
 ?>
 <div class="s4_block_carousel <?php echo esc_attr($class_name); ?>">
