@@ -16,15 +16,53 @@
                 return;
             }
             
-            $('.owl-carousel').owlCarousel({
-                items: 3,
-                loop: true,
-                margin: 10,
-                nav: true,
-                responsive: {
-                    0: { items: 1 },
-                    600: { items: 2 },
-                    1000: { items: 3 }
+            // Initialize each carousel with its own options
+            $('.s4_block_carousel').each(function() {
+                const $carousel = $(this);
+                const options = $carousel.data('carousel-options') || {};
+                
+                // Default options as fallback
+                const defaultOptions = {
+                    items: 1,
+                    loop: true,
+                    margin: 10,
+                    nav: true,
+                    dots: true,
+                    autoplay: true,
+                    autoplayTimeout: 5000,
+                    autoplayHoverPause: true,
+                    mouseDrag: true,
+                    pullDrag: true,
+                    freeDrag: false,
+                    touchDrag: true,
+                    smartSpeed: 500,
+                    overflowHidden: true,
+                    responsive: {
+                        0: {
+                            items: 1,
+                            nav: options.nav
+                        },
+                        600: {
+                            items: 2,
+                            nav: options.nav
+                        },
+                        1000: {
+                            items: 3,
+                            nav: options.nav
+                        }
+                    }
+                };
+           
+                // Merge default options with saved options
+                const carouselOptions = { ...defaultOptions, ...options };
+                
+                // Initialize the carousel with the merged options
+                $carousel.owlCarousel(carouselOptions);
+                
+                // Apply overflow style after initialization
+                const stageOuter = $carousel.find('.owl-stage-outer');
+                if (stageOuter.length) {
+                    stageOuter.css('overflow', carouselOptions.overflowHidden ? 'hidden' : 'visible');
                 }
             });
         });

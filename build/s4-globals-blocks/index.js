@@ -8,7 +8,7 @@
   \******************************************/
 /***/ ((module) => {
 
-module.exports = /*#__PURE__*/JSON.parse('{"$schema":"https://schemas.wp.org/trunk/block.json","apiVersion":3,"name":"s4-globals-blocks/s4-globals-blocks","version":"0.1.0","title":"S4 globals blocks","category":"theme","icon":"vault","description":"Example block scaffolded with Create Block tool.","example":{},"attributes":{"images":{"type":"array","default":[],"items":{"type":"object","properties":{"id":{"type":"number"},"url":{"type":"string"},"alt":{"type":"string"}}}}},"supports":{"interactivity":true},"textdomain":"s4-globals-blocks","editorScript":"file:./index.js","editorStyle":"file:./index.css","style":["file:./style-index.css","file:./assets/assets/owl.carousel.min.css","file:./assets/assets/owl.theme.default.min.css"],"render":"file:./render.php","viewScript":["file:./view.js","file:./assets/owl.carousel.min.js"],"script":["jquery"]}');
+module.exports = /*#__PURE__*/JSON.parse('{"$schema":"https://schemas.wp.org/trunk/block.json","apiVersion":3,"name":"s4-globals-blocks/s4-globals-blocks","version":"0.1.0","title":"S4 globals blocks","category":"theme","icon":"vault","description":"Example block scaffolded with Create Block tool.","example":{},"attributes":{"images":{"type":"array","default":[],"items":{"type":"object","properties":{"id":{"type":"number"},"url":{"type":"string"},"alt":{"type":"string"}}}},"items":{"type":"number","default":1},"loop":{"type":"boolean","default":true},"margin":{"type":"number","default":10},"nav":{"type":"boolean","default":true},"dots":{"type":"boolean","default":true},"autoplay":{"type":"boolean","default":true},"autoplayTimeout":{"type":"number","default":5000},"autoplayHoverPause":{"type":"boolean","default":true},"height":{"type":"number","default":10},"heightUnit":{"type":"string","default":"rem"},"minHeight":{"type":"number","default":200},"imageFit":{"type":"string","default":"cover"},"overflowHidden":{"type":"boolean","default":true}},"supports":{"interactivity":true},"textdomain":"s4-globals-blocks","editorScript":["file:./index.js","file:./assets/owl.carousel.min.js"],"editorStyle":"file:./index.css","style":["file:./style-index.css","file:./assets/assets/owl.carousel.min.css","file:./assets/assets/owl.theme.default.min.css"],"render":"file:./render.php","viewScript":["file:./view.js","file:./assets/owl.carousel.min.js"],"script":["jquery"]}');
 
 /***/ }),
 
@@ -29,8 +29,10 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _editor_scss__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./editor.scss */ "./src/s4-globals-blocks/editor.scss");
 /* harmony import */ var _wordpress_components__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! @wordpress/components */ "@wordpress/components");
 /* harmony import */ var _wordpress_components__WEBPACK_IMPORTED_MODULE_3___default = /*#__PURE__*/__webpack_require__.n(_wordpress_components__WEBPACK_IMPORTED_MODULE_3__);
-/* harmony import */ var react_jsx_runtime__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! react/jsx-runtime */ "react/jsx-runtime");
-/* harmony import */ var react_jsx_runtime__WEBPACK_IMPORTED_MODULE_4___default = /*#__PURE__*/__webpack_require__.n(react_jsx_runtime__WEBPACK_IMPORTED_MODULE_4__);
+/* harmony import */ var _wordpress_element__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! @wordpress/element */ "@wordpress/element");
+/* harmony import */ var _wordpress_element__WEBPACK_IMPORTED_MODULE_4___default = /*#__PURE__*/__webpack_require__.n(_wordpress_element__WEBPACK_IMPORTED_MODULE_4__);
+/* harmony import */ var react_jsx_runtime__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! react/jsx-runtime */ "react/jsx-runtime");
+/* harmony import */ var react_jsx_runtime__WEBPACK_IMPORTED_MODULE_5___default = /*#__PURE__*/__webpack_require__.n(react_jsx_runtime__WEBPACK_IMPORTED_MODULE_5__);
 /**
  * Retrieves the translation of text.
  *
@@ -55,6 +57,7 @@ __webpack_require__.r(__webpack_exports__);
 
 
 
+
 /**
  * The edit function describes the structure of your block in the context of the
  * editor. This represents what the editor will render when the block is used.
@@ -68,39 +71,313 @@ function Edit({
   attributes,
   setAttributes
 }) {
+  const carouselRef = (0,_wordpress_element__WEBPACK_IMPORTED_MODULE_4__.useRef)(null);
   // Assurez-vous que `images` est toujours un tableau
   const images = attributes.images || [];
+
+  // Carousel settings with defaults
+  const {
+    items = 1,
+    loop = true,
+    margin = 10,
+    nav = true,
+    dots = true,
+    autoplay = true,
+    autoplayTimeout = 5000,
+    autoplayHoverPause = true,
+    height = 400,
+    heightUnit = "px",
+    minHeight = 200,
+    imageFit = "cover",
+    overflowHidden = true
+  } = attributes;
   const onSelectImages = newImages => {
     setAttributes({
       images: newImages.map(image => ({
         id: image.id,
         url: image.url,
-        alt: image.alt || "" // Assurez-vous que `alt` est défini
+        alt: image.alt || ""
       }))
     });
   };
-  return /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_4__.jsxs)("div", {
-    ...(0,_wordpress_block_editor__WEBPACK_IMPORTED_MODULE_1__.useBlockProps)(),
-    children: [/*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_4__.jsx)(_wordpress_block_editor__WEBPACK_IMPORTED_MODULE_1__.MediaUploadCheck, {
-      children: /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_4__.jsx)(_wordpress_block_editor__WEBPACK_IMPORTED_MODULE_1__.MediaUpload, {
-        onSelect: onSelectImages,
-        allowedTypes: ["image"],
-        multiple: true,
-        value: images.map(image => image.id),
-        render: ({
-          open
-        }) => /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_4__.jsx)(_wordpress_components__WEBPACK_IMPORTED_MODULE_3__.Button, {
-          onClick: open,
-          variant: "primary",
-          children: (0,_wordpress_i18n__WEBPACK_IMPORTED_MODULE_0__.__)("Choisir des images", "s4-globals-blocks")
-        })
+  const removeImage = indexToRemove => {
+    // Destroy carousel before removing image
+    if (carouselRef.current) {
+      if (jQuery(carouselRef.current).data('owl.carousel')) {
+        jQuery(carouselRef.current).trigger('destroy.owl.carousel');
+      }
+    }
+    const newImages = images.filter((_, index) => index !== indexToRemove);
+    setAttributes({
+      images: newImages
+    });
+  };
+  (0,_wordpress_element__WEBPACK_IMPORTED_MODULE_4__.useEffect)(() => {
+    if (carouselRef.current && images.length > 0) {
+      // Destroy existing carousel if it exists
+      if (jQuery(carouselRef.current).data('owl.carousel')) {
+        jQuery(carouselRef.current).trigger('destroy.owl.carousel');
+      }
+
+      // Initialize Owl Carousel with dynamic settings
+      jQuery(carouselRef.current).owlCarousel({
+        items,
+        loop,
+        margin,
+        nav: nav,
+        dots: dots,
+        autoplay: autoplay,
+        autoplayTimeout: autoplayTimeout,
+        autoplayHoverPause: autoplayHoverPause,
+        mouseDrag: false,
+        pullDrag: false,
+        freeDrag: false,
+        touchDrag: true,
+        smartSpeed: 500,
+        responsive: {
+          0: {
+            items: Math.min(1, items),
+            nav: nav
+          },
+          600: {
+            items: Math.min(2, items),
+            nav: nav
+          },
+          1000: {
+            items: Math.min(3, items),
+            nav: nav
+          }
+        }
+      });
+
+      // Apply overflow style to owl-stage-outer
+      const stageOuter = carouselRef.current.querySelector('.owl-stage-outer');
+      if (stageOuter) {
+        stageOuter.style.overflow = overflowHidden ? 'hidden' : 'visible';
+      }
+    }
+
+    // Cleanup function
+    return () => {
+      if (carouselRef.current) {
+        jQuery(carouselRef.current).trigger('destroy.owl.carousel');
+      }
+    };
+  }, [images, items, loop, margin, nav, dots, autoplay, autoplayTimeout, autoplayHoverPause, overflowHidden]);
+  return /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_5__.jsxs)(react_jsx_runtime__WEBPACK_IMPORTED_MODULE_5__.Fragment, {
+    children: [/*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_5__.jsx)(_wordpress_block_editor__WEBPACK_IMPORTED_MODULE_1__.InspectorControls, {
+      children: /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_5__.jsxs)(_wordpress_components__WEBPACK_IMPORTED_MODULE_3__.PanelBody, {
+        title: (0,_wordpress_i18n__WEBPACK_IMPORTED_MODULE_0__.__)('Paramètres du carrousel', 's4-globals-blocks'),
+        children: [/*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_5__.jsx)(_wordpress_block_editor__WEBPACK_IMPORTED_MODULE_1__.MediaUploadCheck, {
+          children: /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_5__.jsx)(_wordpress_block_editor__WEBPACK_IMPORTED_MODULE_1__.MediaUpload, {
+            onSelect: onSelectImages,
+            allowedTypes: ["image"],
+            multiple: true,
+            value: images.map(image => image.id),
+            render: ({
+              open
+            }) => /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_5__.jsx)(_wordpress_components__WEBPACK_IMPORTED_MODULE_3__.Button, {
+              onClick: open,
+              variant: "primary",
+              className: "components-button",
+              children: (0,_wordpress_i18n__WEBPACK_IMPORTED_MODULE_0__.__)("Choisir des images", "s4-globals-blocks")
+            })
+          })
+        }), images.length > 0 && /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_5__.jsxs)("div", {
+          className: "s4-carousel-image-preview",
+          style: {
+            marginTop: '10px'
+          },
+          children: [/*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_5__.jsx)("p", {
+            style: {
+              marginBottom: '8px',
+              fontSize: '12px',
+              color: '#757575'
+            },
+            children: (0,_wordpress_i18n__WEBPACK_IMPORTED_MODULE_0__.__)('Images sélectionnées:', 's4-globals-blocks')
+          }), /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_5__.jsx)("div", {
+            style: {
+              display: 'grid',
+              gridTemplateColumns: 'repeat(auto-fill, minmax(60px, 1fr))',
+              gap: '8px',
+              marginBottom: '16px'
+            },
+            children: images.map((image, index) => /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_5__.jsxs)("div", {
+              style: {
+                position: 'relative'
+              },
+              children: [/*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_5__.jsx)("img", {
+                src: image.url,
+                alt: image.alt,
+                style: {
+                  width: '100%',
+                  height: '60px',
+                  objectFit: 'cover',
+                  borderRadius: '4px',
+                  border: '1px solid #ddd'
+                }
+              }), /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_5__.jsx)(_wordpress_components__WEBPACK_IMPORTED_MODULE_3__.Button, {
+                isSmall: true,
+                isDestructive: true,
+                onClick: () => removeImage(index),
+                style: {
+                  position: 'absolute',
+                  top: '-8px',
+                  right: '-8px',
+                  padding: '2px',
+                  minWidth: '20px',
+                  height: '20px',
+                  borderRadius: '50%',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center'
+                },
+                children: "\xD7"
+              })]
+            }, index))
+          })]
+        }), /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_5__.jsx)(_wordpress_components__WEBPACK_IMPORTED_MODULE_3__.SelectControl, {
+          label: (0,_wordpress_i18n__WEBPACK_IMPORTED_MODULE_0__.__)('Unité de hauteur', 's4-globals-blocks'),
+          value: heightUnit,
+          options: [{
+            label: (0,_wordpress_i18n__WEBPACK_IMPORTED_MODULE_0__.__)('Pixels (px)', 's4-globals-blocks'),
+            value: 'px'
+          }, {
+            label: (0,_wordpress_i18n__WEBPACK_IMPORTED_MODULE_0__.__)('Rem (rem)', 's4-globals-blocks'),
+            value: 'rem'
+          }, {
+            label: (0,_wordpress_i18n__WEBPACK_IMPORTED_MODULE_0__.__)('Hauteur de la fenêtre (vh)', 's4-globals-blocks'),
+            value: 'vh'
+          }],
+          onChange: value => {
+            setAttributes({
+              heightUnit: value
+            });
+            // Reset height to a reasonable default when changing units
+            if (value === 'vh') {
+              setAttributes({
+                height: 50
+              }); // Default to 50vh
+            } else {
+              setAttributes({
+                height: 400
+              }); // Default to 400px/rem
+            }
+          }
+        }), /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_5__.jsx)(_wordpress_components__WEBPACK_IMPORTED_MODULE_3__.RangeControl, {
+          label: (0,_wordpress_i18n__WEBPACK_IMPORTED_MODULE_0__.__)('Hauteur du carrousel', 's4-globals-blocks'),
+          value: height,
+          onChange: value => setAttributes({
+            height: value
+          }),
+          min: heightUnit === 'vh' ? 1 : 200,
+          max: heightUnit === 'vh' ? 100 : 1000,
+          step: heightUnit === 'vh' ? 1 : 10
+        }), /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_5__.jsx)(_wordpress_components__WEBPACK_IMPORTED_MODULE_3__.RangeControl, {
+          label: (0,_wordpress_i18n__WEBPACK_IMPORTED_MODULE_0__.__)('Hauteur minimale (px)', 's4-globals-blocks'),
+          value: minHeight,
+          onChange: value => setAttributes({
+            minHeight: value
+          }),
+          min: 100,
+          max: 800,
+          step: 10
+        }), /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_5__.jsx)(_wordpress_components__WEBPACK_IMPORTED_MODULE_3__.SelectControl, {
+          label: (0,_wordpress_i18n__WEBPACK_IMPORTED_MODULE_0__.__)('Ajustement de l\'image', 's4-globals-blocks'),
+          value: imageFit,
+          options: [{
+            label: (0,_wordpress_i18n__WEBPACK_IMPORTED_MODULE_0__.__)('Couvrir', 's4-globals-blocks'),
+            value: 'cover'
+          }, {
+            label: (0,_wordpress_i18n__WEBPACK_IMPORTED_MODULE_0__.__)('Contenir', 's4-globals-blocks'),
+            value: 'contain'
+          }],
+          onChange: value => setAttributes({
+            imageFit: value
+          })
+        }), /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_5__.jsx)(_wordpress_components__WEBPACK_IMPORTED_MODULE_3__.RangeControl, {
+          label: (0,_wordpress_i18n__WEBPACK_IMPORTED_MODULE_0__.__)('Éléments à afficher', 's4-globals-blocks'),
+          value: items,
+          onChange: value => setAttributes({
+            items: value
+          }),
+          min: 1,
+          max: 5
+        }), /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_5__.jsx)(_wordpress_components__WEBPACK_IMPORTED_MODULE_3__.RangeControl, {
+          label: (0,_wordpress_i18n__WEBPACK_IMPORTED_MODULE_0__.__)('Marge entre les éléments', 's4-globals-blocks'),
+          value: margin,
+          onChange: value => setAttributes({
+            margin: value
+          }),
+          min: 0,
+          max: 50
+        }), /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_5__.jsx)(_wordpress_components__WEBPACK_IMPORTED_MODULE_3__.RangeControl, {
+          label: (0,_wordpress_i18n__WEBPACK_IMPORTED_MODULE_0__.__)('Délai d\'autoplay (ms)', 's4-globals-blocks'),
+          value: autoplayTimeout,
+          onChange: value => setAttributes({
+            autoplayTimeout: value
+          }),
+          min: 0,
+          max: 10000,
+          step: 500
+        }), /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_5__.jsx)(_wordpress_components__WEBPACK_IMPORTED_MODULE_3__.ToggleControl, {
+          label: (0,_wordpress_i18n__WEBPACK_IMPORTED_MODULE_0__.__)('Boucle', 's4-globals-blocks'),
+          checked: loop,
+          onChange: value => setAttributes({
+            loop: value
+          })
+        }), /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_5__.jsx)(_wordpress_components__WEBPACK_IMPORTED_MODULE_3__.ToggleControl, {
+          label: (0,_wordpress_i18n__WEBPACK_IMPORTED_MODULE_0__.__)('Flèches de navigation', 's4-globals-blocks'),
+          checked: nav,
+          onChange: value => setAttributes({
+            nav: value
+          })
+        }), /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_5__.jsx)(_wordpress_components__WEBPACK_IMPORTED_MODULE_3__.ToggleControl, {
+          label: (0,_wordpress_i18n__WEBPACK_IMPORTED_MODULE_0__.__)('Points de navigation', 's4-globals-blocks'),
+          checked: dots,
+          onChange: value => setAttributes({
+            dots: value
+          })
+        }), /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_5__.jsx)(_wordpress_components__WEBPACK_IMPORTED_MODULE_3__.ToggleControl, {
+          label: (0,_wordpress_i18n__WEBPACK_IMPORTED_MODULE_0__.__)('Lecture automatique', 's4-globals-blocks'),
+          checked: autoplay,
+          onChange: value => setAttributes({
+            autoplay: value
+          })
+        }), /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_5__.jsx)(_wordpress_components__WEBPACK_IMPORTED_MODULE_3__.ToggleControl, {
+          label: (0,_wordpress_i18n__WEBPACK_IMPORTED_MODULE_0__.__)('Pause au survol', 's4-globals-blocks'),
+          checked: autoplayHoverPause,
+          onChange: value => setAttributes({
+            autoplayHoverPause: value
+          })
+        }), /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_5__.jsx)(_wordpress_components__WEBPACK_IMPORTED_MODULE_3__.ToggleControl, {
+          label: (0,_wordpress_i18n__WEBPACK_IMPORTED_MODULE_0__.__)('Masquer le débordement', 's4-globals-blocks'),
+          checked: overflowHidden,
+          onChange: value => setAttributes({
+            overflowHidden: value
+          })
+        })]
       })
-    }), /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_4__.jsx)("div", {
-      className: "owl-carousel",
-      children: images.map((image, index) => /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_4__.jsx)("img", {
-        src: image.url,
-        alt: image.alt
-      }, index))
+    }), /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_5__.jsx)("div", {
+      ...(0,_wordpress_block_editor__WEBPACK_IMPORTED_MODULE_1__.useBlockProps)(),
+      children: /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_5__.jsx)("div", {
+        className: "owl-carousel",
+        ref: carouselRef,
+        style: {
+          height: `${height}${heightUnit}`,
+          minHeight: `${minHeight}px`
+        },
+        children: images.map((image, index) => /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_5__.jsx)("div", {
+          className: "item",
+          children: /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_5__.jsx)("img", {
+            src: image.url,
+            alt: image.alt,
+            style: {
+              objectFit: imageFit
+            }
+          })
+        }, index))
+      })
     })]
   });
 }
@@ -206,6 +483,16 @@ module.exports = window["wp"]["blocks"];
 /***/ ((module) => {
 
 module.exports = window["wp"]["components"];
+
+/***/ }),
+
+/***/ "@wordpress/element":
+/*!*********************************!*\
+  !*** external ["wp","element"] ***!
+  \*********************************/
+/***/ ((module) => {
+
+module.exports = window["wp"]["element"];
 
 /***/ }),
 

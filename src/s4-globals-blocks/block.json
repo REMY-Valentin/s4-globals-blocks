@@ -26,15 +26,71 @@
 					}
 				}
 			}
+		},
+		"items": {
+			"type": "number",
+			"default": 1
+		},
+		"loop": {
+			"type": "boolean",
+			"default": true
+		},
+		"margin": {
+			"type": "number",
+			"default": 10
+		},
+		"nav": {
+			"type": "boolean",
+			"default": true
+		},
+		"dots": {
+			"type": "boolean",
+			"default": true
+		},
+		"autoplay": {
+			"type": "boolean",
+			"default": true
+		},
+		"autoplayTimeout": {
+			"type": "number",
+			"default": 5000
+		},
+		"autoplayHoverPause": {
+			"type": "boolean",
+			"default": true
+		},
+		"height": {
+			"type": "number",
+			"default": 10
+		},
+		"heightUnit": {
+			"type": "string",
+			"default": "rem"
+		},
+		"minHeight": {
+			"type": "number",
+			"default": 200
+		},
+		"imageFit": {
+			"type": "string",
+			"default": "cover"
+		},
+		"overflowHidden": {
+			"type": "boolean",
+			"default": true
 		}
 	},
 	"supports": {
 		"interactivity": true
 	},
 	"textdomain": "s4-globals-blocks",
-	"editorScript": "file:./index.js",
+	"editorScript": ["file:./index.js", "file:./assets/owl.carousel.min.js"],
 	"editorStyle": "file:./index.css",
-	"style": ["file:./style-index.css", "file:./assets/assets/owl.carousel.min.css", "file:./assets/assets/owl.theme.default.min.css"],
+	"style": [
+		"file:./style-index.css",
+		"file:./assets/assets/owl.carousel.min.css",
+		"file:./assets/assets/owl.theme.default.min.css"
+	],
 	"render": "file:./render.php",
 	"viewScript": ["file:./view.js", "file:./assets/owl.carousel.min.js"],
 	"script": ["jquery"]
