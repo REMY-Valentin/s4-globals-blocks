@@ -1,0 +1,58 @@
+/**
+ * The following styles get applied inside the editor only.
+ *
+ * Replace them with your own styles or remove the file completely.
+ */
+
+.wp-block-s4-globals-blocks-s4-globals-blocks {
+	margin: 20px 0;
+	position: relative;
+	.owl-stage-outer {
+		height: 100%;
+  }
+  .owl-stage {
+		display: flex;
+		align-items: center;
+		height: 100%;
+  }
+  .owl-item {
+		height: 100%;
+		display: flex;
+		align-items: center;
+		justify-content: center;    
+		.item {
+			 width: 100%;
+			 height: 100%;
+			 img {
+				  width: 100%;
+				  height: 100%;
+				  object-fit: cover;
+			 }
+		}
+  }
+  .owl-nav {
+		&.disabled {    
+			 display: none;
+		}
+  }
+  .owl-carousel {
+			&:empty {
+				border: 2px dashed #ccc;
+				min-height: 200px;
+				display: flex;
+				align-items: center;
+				justify-content: center;
+				background-color: #f9f9f9;
+				position: relative;
+				
+				&::before {
+					content: 'Aucune image sélectionnée';
+					color: #666;
+					font-size: 14px;
+					font-style: italic;
+				}
+			}
+	}
+}
+
+

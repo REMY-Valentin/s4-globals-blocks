@@ -26,5 +26,6 @@ if ( ! defined( 'ABSPATH' ) ) {
  */
 function s4_globals_blocks_s4_globals_blocks_block_init() {
 	register_block_type( __DIR__ . '/build/s4-globals-blocks' );
+	register_block_type( __DIR__ . '/build/s4-globals-blocks-2' );
 }
 add_action( 'init', 's4_globals_blocks_s4_globals_blocks_block_init' );
