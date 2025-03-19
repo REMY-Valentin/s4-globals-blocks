@@ -8,7 +8,7 @@
   \******************************************/
 /***/ ((module) => {
 
-module.exports = /*#__PURE__*/JSON.parse('{"$schema":"https://schemas.wp.org/trunk/block.json","apiVersion":3,"name":"s4-globals-blocks/s4-globals-blocks","version":"0.1.0","title":"S4 globals blocks","category":"theme","icon":"vault","description":"Example block scaffolded with Create Block tool.","example":{},"attributes":{"images":{"type":"array","default":[],"items":{"type":"object","properties":{"id":{"type":"number"},"url":{"type":"string"},"alt":{"type":"string"}}}},"items":{"type":"number","default":1},"loop":{"type":"boolean","default":true},"margin":{"type":"number","default":10},"nav":{"type":"boolean","default":true},"dots":{"type":"boolean","default":true},"autoplay":{"type":"boolean","default":true},"autoplayTimeout":{"type":"number","default":5000},"autoplayHoverPause":{"type":"boolean","default":true},"height":{"type":"number","default":10},"heightUnit":{"type":"string","default":"rem"},"minHeight":{"type":"number","default":200},"imageFit":{"type":"string","default":"cover"},"overflowHidden":{"type":"boolean","default":true}},"supports":{"interactivity":true},"textdomain":"s4-globals-blocks","editorScript":["file:./index.js","file:./assets/owl.carousel.min.js"],"editorStyle":"file:./index.css","style":["file:./style-index.css","file:./assets/assets/owl.carousel.min.css","file:./assets/assets/owl.theme.default.min.css"],"render":"file:./render.php","viewScript":["file:./view.js","file:./assets/owl.carousel.min.js"],"script":["jquery"]}');
+module.exports = /*#__PURE__*/JSON.parse('{"$schema":"https://schemas.wp.org/trunk/block.json","apiVersion":3,"name":"s4-globals-blocks/s4-globals-blocks","version":"0.1.0","title":"S4 globals blocks","category":"theme","icon":"vault","description":"Example block scaffolded with Create Block tool.","example":{},"attributes":{"images":{"type":"array","default":[],"items":{"type":"object","properties":{"id":{"type":"number"},"url":{"type":"string"},"alt":{"type":"string"}}}},"items":{"type":"number","default":1},"loop":{"type":"boolean","default":true},"margin":{"type":"number","default":10},"nav":{"type":"boolean","default":true},"dots":{"type":"boolean","default":true},"autoplay":{"type":"boolean","default":true},"autoplayTimeout":{"type":"number","default":5000},"autoplayHoverPause":{"type":"boolean","default":true},"height":{"type":"number","default":10},"heightUnit":{"type":"string","default":"rem"},"minHeight":{"type":"number","default":200},"imageFit":{"type":"string","default":"cover"},"overflowHidden":{"type":"boolean","default":true},"customClass":{"type":"string","default":""}},"supports":{"interactivity":true},"textdomain":"s4-globals-blocks","editorScript":["file:./index.js","file:./assets/owl.carousel.min.js"],"editorStyle":"file:./index.css","style":["file:./style-index.css","file:./assets/assets/owl.carousel.min.css","file:./assets/assets/owl.theme.default.min.css"],"render":"file:./render.php","viewScript":["file:./view.js","file:./assets/owl.carousel.min.js"],"script":["jquery"]}');
 
 /***/ }),
 
@@ -356,6 +356,20 @@ function Edit({
           onChange: value => setAttributes({
             overflowHidden: value
           })
+        }), /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_5__.jsx)(_wordpress_components__WEBPACK_IMPORTED_MODULE_3__.TextControl, {
+          label: (0,_wordpress_i18n__WEBPACK_IMPORTED_MODULE_0__.__)('Classe CSS personnalisée', 's4-globals-blocks'),
+          value: attributes.customClass || '',
+          onChange: value => setAttributes({
+            customClass: value
+          })
+        }), /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_5__.jsx)("p", {
+          className: "components-base-control__help",
+          style: {
+            fontSize: '12px',
+            color: '#757575',
+            marginTop: '4px'
+          },
+          children: (0,_wordpress_i18n__WEBPACK_IMPORTED_MODULE_0__.__)('Ajoutez une classe CSS personnalisée pour styliser votre carrousel.', 's4-globals-blocks')
         })]
       })
     }), /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_5__.jsx)("div", {

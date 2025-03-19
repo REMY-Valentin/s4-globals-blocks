@@ -78,6 +78,10 @@
 		"overflowHidden": {
 			"type": "boolean",
 			"default": true
+		},
+		"customClass": {
+			"type": "string",
+			"default": ""
 		}
 	},
 	"supports": {

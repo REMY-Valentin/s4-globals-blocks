@@ -25,14 +25,14 @@ $overflowHidden = isset($attributes['overflowHidden']) ? $attributes['overflowHi
 // Construire la classe CSS
 $class_name = 'owl-carousel';
 
-// Ajouter une classe personnalisée si elle existe
-if (!empty($attributes['className'])) {
-    $class_name .= ' ' . esc_attr($attributes['className']);
-}
-
 // Ajouter une classe d'alignement si elle existe
 if (!empty($block->align)) {
     $class_name .= ' align' . esc_attr($block->align);
+}
+
+// Ajouter une classe personnalisée si elle existe
+if (!empty($attributes['customClass'])) {
+    $class_name .= ' ' . esc_attr($attributes['customClass']);
 }
 
 // Préparer les options du carousel

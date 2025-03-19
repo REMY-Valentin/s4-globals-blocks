@@ -25,7 +25,7 @@ import {
  * @see https://www.npmjs.com/package/@wordpress/scripts#using-css
  */
 import "./editor.scss";
-import { Button, PanelBody, RangeControl, ToggleControl, SelectControl } from "@wordpress/components";
+import { Button, PanelBody, RangeControl, ToggleControl, SelectControl, TextControl } from "@wordpress/components";
 import { useEffect, useRef } from "@wordpress/element";
 
 /**
@@ -293,6 +293,14 @@ export default function Edit({ attributes, setAttributes }) {
 						checked={overflowHidden}
 						onChange={(value) => setAttributes({ overflowHidden: value })}
 					/>
+					<TextControl
+						label={__('Classe CSS personnalisée', 's4-globals-blocks')}
+						value={attributes.customClass || ''}
+						onChange={(value) => setAttributes({ customClass: value })}
+					/>
+					<p className="components-base-control__help" style={{ fontSize: '12px', color: '#757575', marginTop: '4px' }}>
+						{__('Ajoutez une classe CSS personnalisée pour styliser votre carrousel.', 's4-globals-blocks')}
+					</p>
 				</PanelBody>
 			</InspectorControls>
 			<div {...useBlockProps()}>
