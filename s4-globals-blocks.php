@@ -79,15 +79,15 @@ function s4_blocks_disable_blocks($allowed_blocks) {
 		$registry = WP_Block_Type_Registry::get_instance();
 		$all_blocks = array_keys($registry->get_all_registered());
 		
-		// Récupérer uniquement les blocs activés
-		$enabled_blocks = get_option('s4_enabled_blocks', array());
+		// Récupérer les blocs activés, si l'option n'existe pas encore, activer tous les blocs
+		$enabled_blocks = get_option('s4_enabled_blocks', $all_blocks);
 		
-		// Si aucun bloc n'est activé, retourner un tableau vide
+		// Si l'option existe mais est vide, activer tous les blocs
 		if (empty($enabled_blocks)) {
-			return array();
+			return $all_blocks;
 		}
 		
-		// Retourner uniquement les blocs activés
+		// Retourner les blocs activés
 		return $enabled_blocks;
 	}
 	
@@ -102,11 +102,18 @@ function s4_blocks_render_admin_page() {
 		wp_die('Accès refusé');
 	}
 
-	// Récupérer les blocs activés
-	$enabled_blocks = get_option('s4_enabled_blocks', array());
-
 	// Récupérer tous les blocs enregistrés
 	$registered_blocks = WP_Block_Type_Registry::get_instance()->get_all_registered();
+	$all_blocks = array_keys($registered_blocks);
+
+	// Récupérer les blocs activés, par défaut tous les blocs sont activés
+	$enabled_blocks = get_option('s4_enabled_blocks', $all_blocks);
+
+	// Si c'est la première visite (option non définie), activer tous les blocs
+	if (get_option('s4_enabled_blocks') === false) {
+		update_option('s4_enabled_blocks', $all_blocks);
+		$enabled_blocks = $all_blocks;
+	}
 
 	// Définir l'ordre des catégories
 	$category_order = array(

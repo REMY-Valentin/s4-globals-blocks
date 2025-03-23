@@ -1,12 +1,12 @@
 {
   "$schema": "https://schemas.wp.org/trunk/block.json",
   "apiVersion": 3,
-  "name": "s4-globals-blocks/s4-globals-blocks",
+  "name": "s4-globals-blocks/s4-blocks-carousel",
   "version": "0.1.0",
-  "title": "S4 globals blocks",
+  "title": "S4 blocks carousel",
   "category": "theme",
-  "icon": "vault",
-  "description": "Example block scaffolded with Create Block tool.",
+  "icon": "images-alt2",
+  "description": "Bloc carousel image",
   "example": {},
   "attributes": {
     "images": {
@@ -26,6 +26,40 @@
           }
         }
       }
+    },
+    "navPrevImage": {
+      "type": "object",
+      "default": null,
+      "properties": {
+        "id": {
+          "type": "number"
+        },
+        "url": {
+          "type": "string"
+        },
+        "alt": {
+          "type": "string"
+        }
+      }
+    },
+    "navNextImage": {
+      "type": "object",
+      "default": null,
+      "properties": {
+        "id": {
+          "type": "number"
+        },
+        "url": {
+          "type": "string"
+        },
+        "alt": {
+          "type": "string"
+        }
+      }
+    },
+    "useCustomNav": {
+      "type": "boolean",
+      "default": false
     },
     "items": {
       "type": "number",
@@ -82,6 +116,29 @@
     "customClass": {
       "type": "string",
       "default": ""
+    },
+    "permissions": {
+      "type": "object",
+      "default": {
+        "dimensions": true,
+        "navigation": true,
+        "imageAdjustment": false,
+        "autoplay": false,
+        "cssCustomization": false,
+        "responsive": false
+      }
+    },
+    "navStyle": {
+      "type": "string",
+      "default": "default"
+    },
+    "bootstrapPrevIcon": {
+      "type": "string",
+      "default": "bi-chevron-left"
+    },
+    "bootstrapNextIcon": {
+      "type": "string",
+      "default": "bi-chevron-right"
     }
   },
   "supports": {
@@ -92,11 +149,17 @@
     "file:./index.js",
     "file:./assets/owl.carousel.min.js"
   ],
-  "editorStyle": "file:./index.css",
+  "editorStyle": [
+    "file:./index.css",
+    "file:./assets/assets/owl.carousel.min.css",
+    "file:./assets/assets/owl.theme.default.min.css",
+    "file:./assets/bootstrap-icons-1.11.3/font/bootstrap-icons.css"
+  ],
   "style": [
     "file:./style-index.css",
     "file:./assets/assets/owl.carousel.min.css",
-    "file:./assets/assets/owl.theme.default.min.css"
+    "file:./assets/assets/owl.theme.default.min.css",
+    "file:./assets/bootstrap-icons-1.11.3/font/bootstrap-icons.css"
   ],
   "render": "file:./render.php",
   "viewScript": [

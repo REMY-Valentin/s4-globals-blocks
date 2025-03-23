@@ -1,3 +1,5 @@
+@import "./assets/bootstrap-icons-1.11.3/font/bootstrap-icons.css";
+
 /**
  * The following styles get applied both on the front of your site
  * and in the editor.
@@ -5,40 +7,185 @@
  * Replace them with your own styles or remove the file completely.
  */
 
+// Main carousel container styling
 .s4_block_carousel {
-    margin: 20px 0;
-    .owl-stage-outer {
+    position: relative;
+    display: block;
+    width: 100%;
+    box-sizing: border-box;
+    margin-bottom: 20px;
+    
+    // Ensure carousel items are properly sized
+    .item {
+        position: relative;
+        display: block;
         height: 100%;
-    }
-    &[data-overflow-hidden="true"] .owl-stage-outer {
         overflow: hidden;
-    }
-    &[data-overflow-hidden="false"] .owl-stage-outer {
-        overflow: visible;
-    }
-    .owl-stage {
-        display: flex;
-        align-items: center;
-        height: 100%;
-    }
-    .owl-item {
-        height: 100%;
-        display: flex;
-        align-items: center;
-        justify-content: center;    
-        .item {
+        
+        img {
             width: 100%;
             height: 100%;
-            img {
-                width: 100%;
-                height: 100%;
-                object-fit: cover;
+            display: block;
+            object-fit: cover; // Ensure consistent image display
+        }
+    }
+    
+    // Main owl-carousel class always added by the plugin
+    &.owl-carousel {
+        display: block; // Ensure display is set
+
+        // Fix for owl-stage to ensure proper height
+        .owl-stage {
+            display: flex;
+            height: 100%;
+        }
+        
+        .owl-item {
+            height: 100%;
+        }
+
+        // Fix for owl-stage-outer overflow
+        .owl-stage-outer {
+            overflow: hidden; // Default
+            height: 100%;
+        }
+        
+        // Navigation arrows styling
+        .owl-nav {
+            position: absolute;
+            width: 100%;
+            top: 50%;
+            transform: translateY(-50%);
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: space-between;
+            pointer-events: none;
+            z-index: 10;
+            
+            button {
+                pointer-events: auto;
+                background: rgba(255, 255, 255, 0.7) !important;
+                width: 40px;
+                height: 40px;
+                border-radius: 50%;
+                margin: 0 10px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                transition: all 0.3s ease;
+                
+                &:hover {
+                    background: rgba(255, 255, 255, 0.9) !important;
+                }
+                
+                span {
+                    font-size: 24px;
+                    line-height: 1;
+                }
+                
+                &.owl-prev {
+                    left: 10px;
+                }
+                
+                &.owl-next {
+                    right: 10px;
+                }
+            }
+        }
+        
+        // Dots styling
+        .owl-dots {
+            position: absolute;
+            bottom: 10px;
+            left: 0;
+            right: 0;
+            display: flex;
+            justify-content: center;
+            margin-top: 10px;
+            
+            .owl-dot {
+                display: inline-block;
+                width: 10px;
+                height: 10px;
+                margin: 0 5px;
+                background: rgba(255, 255, 255, 0.5);
+                border-radius: 50%;
+                transition: all 0.3s ease;
+                
+                &.active, &:hover {
+                    background: white;
+                }
+                
+                span {
+                    display: none;
+                }
+            }
+        }
+        
+        // Bootstrap style
+        &[data-nav-style="bootstrap"] {
+            .owl-nav {
+                button {
+                    background-color: rgba(0, 0, 0, 0.5) !important;
+                    font-size: 1.5rem;
+                    
+                    i {
+                        color: white;
+                        font-size: 1.2rem;
+                    }
+                    
+                    &:hover {
+                        background: rgba(0, 0, 0, 0.8) !important;
+                    }
+                }
+            }
+            
+            .owl-dots {
+                text-align: center;
+                margin-top: 10px;
+                
+                .owl-dot {
+                    background: rgba(0, 0, 0, 0.3);
+                    
+                    &.active, &:hover {
+                        background: rgba(0, 0, 0, 0.8);
+                    }
+                }
+            }
+        }
+        
+        // Custom nav style
+        &[data-nav-style="custom"] {
+            .owl-nav-custom-img {
+                width: 40px;
+                height: 40px;
+                object-fit: contain;
             }
         }
     }
-    .owl-nav {
-        &.disabled {    
-            display: none;
+    
+    // Empty carousel styling
+    .empty-carousel {
+        background-color: #f8f9fa;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        height: 100%;
+        
+        p {
+            color: #6c757d;
+            font-style: italic;
         }
     }
+    
+    // Ensure visibility when overflow is set to visible
+    &[data-overflow-hidden="false"] .owl-stage-outer {
+        overflow: visible !important;
+    }
+}
+
+// Additional fix for admin edit screen
+.editor-styles-wrapper .s4_block_carousel {
+    min-height: 200px;
 }
