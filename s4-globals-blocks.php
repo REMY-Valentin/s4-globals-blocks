@@ -26,7 +26,7 @@ if ( ! defined( 'ABSPATH' ) ) {
  */
 function s4_globals_blocks_s4_globals_blocks_block_init() {
 	register_block_type( __DIR__ . '/build/s4-globals-blocks' );
-	register_block_type( __DIR__ . '/build/s4-globals-blocks-2' );
+	register_block_type( __DIR__ . '/build/s4-buttons' );
 }
 add_action( 'init', 's4_globals_blocks_s4_globals_blocks_block_init' );
 
@@ -685,11 +685,23 @@ function s4_blocks_render_admin_page() {
 			<input type="hidden" name="action" value="save_s4_blocks">
 			<input type="hidden" name="embed_variations_submitted" value="1">
 			<?php wp_nonce_field('s4_blocks_settings_nonce'); ?>
+			
+			<!-- Block search functionality -->
+			<div class="global-search-container">
+				<div class="block-search">
+					<input type="text" id="global-blocks-filter" placeholder="Rechercher un bloc..." />
+					<span class="dashicons dashicons-search"></span>
+				</div>
+				<div class="search-info">
+					<span id="search-results-count"></span>
+				</div>
+			</div>
+			
 			<p class="submit">
 				<input type="submit" class="button button-primary" value="Enregistrer les modifications">
 			</p>
 			<?php foreach ($blocks_by_category as $category => $blocks) : ?>
-				<div class="category-section <?php echo $category === 'embed' ? 'active' : ''; ?>">
+				<div class="category-section">
 					<div class="category-header">
 						<h2 class="category-title">
 							<span class="dashicons dashicons-arrow-down-alt2"></span>
@@ -802,7 +814,7 @@ function s4_blocks_render_admin_page() {
 									<?php foreach ($blocks as $block) : ?>
 										<tr>
 											<td>
-												<?php echo esc_html($block['title']); ?>
+												<span class="block-title-text"><?php echo esc_html($block['title']); ?></span>
 												<br>
 												<small><code><?php echo esc_html($block['name']); ?></code></small>
 												<?php if (!empty($block['description'])) : ?>
@@ -1146,6 +1158,59 @@ function s4_blocks_render_admin_page() {
 				margin-left: 0;
 			}
 		}
+
+		/* Global block search styles */
+		.global-search-container {
+			display: flex;
+			justify-content: space-between;
+			align-items: center;
+			margin: 20px 0;
+			padding: 15px;
+			background: #f5f5f5;
+			border-radius: 4px;
+			border: 1px solid #ddd;
+		}
+		
+		.block-search {
+			position: relative;
+			flex-grow: 1;
+			max-width: 600px;
+		}
+		
+		.block-search input {
+			width: 100%;
+			padding: 8px 12px 8px 35px;
+			border-radius: 4px;
+			border: 1px solid #ddd;
+			font-size: 16px;
+		}
+		
+		.block-search .dashicons {
+			position: absolute;
+			left: 10px;
+			top: 50%;
+			transform: translateY(-50%);
+			color: #666;
+		}
+		
+		.search-info {
+			margin-left: 20px;
+			color: #555;
+			font-style: italic;
+		}
+		
+		.highlight-result {
+			background-color: #ffeb3b;
+			padding: 2px;
+		}
+		
+		.category-section.no-results {
+			display: none;
+		}
+		
+		.category-content tr.hidden-row {
+			display: none;
+		}
 	</style>
 
 	<script>
@@ -1308,6 +1373,139 @@ function s4_blocks_render_admin_page() {
 			$(this).addClass('active');
 			$('.view-grid').removeClass('active');
 			$('.embed-grid').removeClass('view-mode-grid').addClass('view-mode-list');
+		});
+
+		// Global blocks search functionality
+		$('#global-blocks-filter').on('keyup', function() {
+			var searchTerm = $(this).val().toLowerCase();
+			var totalResults = 0;
+			var resultsInCategory = {};
+			
+			// Reset visibility of all sections and rows
+			$('.category-section').removeClass('no-results active');
+			$('.category-content').hide();
+			$('.category-content tr').removeClass('hidden-row');
+			$('.embed-item').show();
+			
+			// Remove any existing highlight
+			$('.block-title-text, .embed-title').each(function() {
+				$(this).text($(this).data('original-text') || $(this).text());
+			});
+			
+			// If search is empty, just show collapsed categories
+			if (searchTerm === '') {
+				$('#search-results-count').text('');
+				return;
+			}
+			
+			// Search in regular blocks
+			$('.category-content tr').each(function() {
+				var blockTitle = $(this).find('td:first-child').text().toLowerCase();
+				var category = $(this).closest('.category-section').find('.category-title').text().trim();
+				
+				if (blockTitle.indexOf(searchTerm) > -1) {
+					var $categorySection = $(this).closest('.category-section');
+					$categorySection.addClass('active');
+					$categorySection.find('.category-content').show();
+					
+					// Highlight the matching text
+					var $titleCell = $(this).find('td:first-child');
+					var originalText = $titleCell.find('.block-title-text').data('original-text') || $titleCell.find('.block-title-text').text();
+					var highlightedText = originalText.replace(
+						new RegExp('(' + searchTerm + ')', 'gi'), 
+						'<span class="highlight-result">$1</span>'
+					);
+					
+					// Store original text if not already stored
+					if (!$titleCell.find('.block-title-text').data('original-text')) {
+						$titleCell.find('.block-title-text').data('original-text', originalText);
+					}
+					
+					$titleCell.find('.block-title-text').html(highlightedText);
+					
+					totalResults++;
+					
+					// Track results per category
+					if (!resultsInCategory[category]) {
+						resultsInCategory[category] = 0;
+					}
+					resultsInCategory[category]++;
+				} else {
+					$(this).addClass('hidden-row');
+				}
+			});
+			
+			// Search in embed variations
+			$('.embed-item').each(function() {
+				var embedTitle = $(this).find('.embed-title').text().toLowerCase();
+				var embedDesc = $(this).find('.embed-description').text().toLowerCase();
+				var category = 'Embeds';
+				
+				if (embedTitle.indexOf(searchTerm) > -1 || embedDesc.indexOf(searchTerm) > -1) {
+					var $categorySection = $(this).closest('.category-section');
+					$categorySection.addClass('active');
+					$categorySection.find('.category-content').show();
+					
+					// Highlight the matching text in title
+					var $titleElement = $(this).find('.embed-title');
+					var originalText = $titleElement.data('original-text') || $titleElement.text();
+					
+					// Store original text if not already stored
+					if (!$titleElement.data('original-text')) {
+						$titleElement.data('original-text', originalText);
+					}
+					
+					if (embedTitle.indexOf(searchTerm) > -1) {
+						var highlightedText = originalText.replace(
+							new RegExp('(' + searchTerm + ')', 'gi'), 
+							'<span class="highlight-result">$1</span>'
+						);
+						$titleElement.html(highlightedText);
+					}
+					
+					totalResults++;
+					
+					// Track results per category
+					if (!resultsInCategory[category]) {
+						resultsInCategory[category] = 0;
+					}
+					resultsInCategory[category]++;
+				} else {
+					$(this).hide();
+				}
+			});
+			
+			// Hide categories with no results
+			$('.category-section').each(function() {
+				var category = $(this).find('.category-title').text().trim();
+				var hasVisibleBlocks = false;
+				
+				// Check for normal blocks
+				if ($(this).find('tr:not(.hidden-row)').length > 0) {
+					hasVisibleBlocks = true;
+				}
+				
+				// Check for visible embed variations
+				if ($(this).find('.embed-item:visible').length > 0) {
+					hasVisibleBlocks = true;
+				}
+				
+				if (!hasVisibleBlocks) {
+					$(this).addClass('no-results');
+				}
+			});
+			
+			// Update search results count
+			if (totalResults === 0) {
+				$('#search-results-count').text('Aucun résultat trouvé');
+			} else {
+				var resultText = totalResults === 1 ? 'résultat trouvé' : 'résultats trouvés';
+				var categoryBreakdown = Object.keys(resultsInCategory).map(function(cat) {
+					return cat.replace(/[^a-zA-Z0-9]+/g, '') + ': ' + resultsInCategory[cat];
+				}).join(', ');
+				
+				$('#search-results-count').text(totalResults + ' ' + resultText + ' (' + categoryBreakdown + ')');
+			}
 		});
 	});
 	</script>

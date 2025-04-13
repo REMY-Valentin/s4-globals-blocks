@@ -1,0 +1,57 @@
+/**
+ * Editor styles for the S4 Buttons block
+ */
+
+// Import the main styles to ensure consistency
+@import './style.scss';
+
+// Editor-specific styles
+.wp-block-s4-globals-blocks-buttons {
+  position: relative;
+
+  // Enhanced editor visuals
+  &.is-selected,
+  &.has-child-selected {
+    outline: 1px dashed #007cba;
+    outline-offset: 4px;
+  }
+  
+  // Improve link editor UI
+  .s4-button-link-editor-button {
+    display: block;
+    width: 100%;
+    text-align: center;
+    margin-top: 8px;
+  }
+  
+  // Make the RichText component more visible in the editor
+  .block-editor-rich-text__editable {
+    min-width: 1px;
+    min-height: 18px;
+    
+    &:empty {
+      position: relative;
+      
+      &:before {
+        content: attr(placeholder);
+        color: #757575;
+        font-style: italic;
+        position: absolute;
+        pointer-events: none;
+      }
+    }
+  }
+  
+  // Icons spacing in editor
+  .bi {
+    vertical-align: -0.125em;
+    
+    &:first-child {
+      margin-right: 0.5em;
+    }
+    
+    &:last-child {
+      margin-left: 0.5em;
+    }
+  }
+}

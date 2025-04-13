@@ -1,0 +1,82 @@
+{
+  "$schema": "https://schemas.wp.org/trunk/block.json",
+  "apiVersion": 3,
+  "name": "s4-globals-blocks/buttons",
+  "version": "0.1.0",
+  "title": "S4 Buttons",
+  "category": "theme",
+  "parent": [ "core/buttons" ],
+  "icon": "button",
+  "description": "Enhanced button block with additional styling options and features.",
+  "supports": {
+    "html": false,
+    "reusable": false,
+    "multiple": true,
+    "inserter": true
+  },
+  "textdomain": "s4-globals-blocks",
+  "editorScript": "file:./index.js",
+  "editorStyle": "file:./editor.scss",
+  "style": "file:./style.scss",
+  "render": "file:./render.php",
+  "attributes": {
+    "buttonType": {
+      "type": "string",
+      "default": "primary"
+    },
+    "iconPosition": {
+      "type": "string",
+      "default": "none",
+      "enum": ["none", "left", "right"]
+    },
+    "iconName": {
+      "type": "string",
+      "default": ""
+    },
+    "hoverEffect": {
+      "type": "string",
+      "default": "none",
+      "enum": ["none", "grow", "shrink", "pulse", "slide"]
+    },
+    "customPadding": {
+      "type": "object",
+      "default": {
+        "top": "",
+        "right": "",
+        "bottom": "",
+        "left": ""
+      }
+    },
+    "borderRadius": {
+      "type": "string",
+      "default": ""
+    },
+    "isFullWidth": {
+      "type": "boolean",
+      "default": false
+    },
+    "url": {
+      "type": "string",
+      "source": "attribute",
+      "selector": "a",
+      "attribute": "href"
+    },
+    "linkTarget": {
+      "type": "string",
+      "source": "attribute",
+      "selector": "a",
+      "attribute": "target"
+    },
+    "rel": {
+      "type": "string",
+      "source": "attribute",
+      "selector": "a",
+      "attribute": "rel"
+    },
+    "text": {
+      "type": "string",
+      "source": "html",
+      "selector": "a"
+    }
+  }
+}
