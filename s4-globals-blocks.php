@@ -307,6 +307,41 @@ function s4_blocks_render_admin_page() {
 		),
 	);
 
+	// S'assurer que tous les embeds définis dans $embed_details sont dans la catégorie embed
+	// même s'ils ne sont pas enregistrés dans WordPress
+	if (!isset($blocks_by_category['embed'])) {
+		$blocks_by_category['embed'] = array();
+	}
+	
+	// Créer une liste des noms de blocs d'embed existants pour éviter les doublons
+	$existing_embed_blocks = array_map(function($block) {
+		return $block['name'];
+	}, $blocks_by_category['embed']);
+	
+	// Ajouter tous les embeds de $embed_details qui ne sont pas déjà dans $blocks_by_category['embed']
+	foreach ($embed_details as $block_name => $details) {
+		if (!in_array($block_name, $existing_embed_blocks)) {
+			// Extraire le nom d'affichage depuis le bloc (ex: "core/youtube" devient "YouTube")
+			$display_name = ucfirst(str_replace('core/', '', $block_name));
+			// Convertir meetup-com en Meetup
+			$display_name = str_replace('-com', '', $display_name);
+			// Remplacer les tirets par des espaces
+			$display_name = str_replace('-', ' ', $display_name);
+			
+			$blocks_by_category['embed'][] = array(
+				'name' => $block_name,
+				'title' => $display_name,
+				'description' => $details['description'],
+				'enabled' => in_array($block_name, $enabled_blocks)
+			);
+		}
+	}
+
+	// Trier les embeds par ordre alphabétique
+	usort($blocks_by_category['embed'], function($a, $b) {
+		return strcmp($a['title'], $b['title']);
+	});
+
 	?>
 	<div class="wrap">
 		<h1>Gestion des Blocs Gutenberg</h1>
@@ -339,6 +374,7 @@ function s4_blocks_render_admin_page() {
 							}
 							echo esc_html($category_display_name);
 							?>
+							<span class="category-count">(<?php echo count($blocks); ?>)</span>
 						</h2>
 						<label class="switch master-switch">
 							<input type="checkbox" 
@@ -361,9 +397,13 @@ function s4_blocks_render_admin_page() {
 								<div class="embed-actions">
 									<button type="button" class="button select-all-embeds" data-category="embed">Tout sélectionner</button>
 									<button type="button" class="button deselect-all-embeds" data-category="embed">Tout désélectionner</button>
+									<div class="embed-view-toggle">
+										<button type="button" class="button view-grid active" title="Affichage en grille"><span class="dashicons dashicons-grid-view"></span></button>
+										<button type="button" class="button view-list" title="Affichage en liste"><span class="dashicons dashicons-list-view"></span></button>
+									</div>
 								</div>
 							</div>
-							<div class="embed-grid">
+							<div class="embed-grid view-mode-grid">
 								<?php foreach ($blocks as $block) : ?>
 									<?php 
 										$block_details = isset($embed_details[$block['name']]) ? $embed_details[$block['name']] : array(
@@ -371,7 +411,7 @@ function s4_blocks_render_admin_page() {
 											'icon' => 'dashicons-embed-generic'
 										);
 									?>
-									<div class="embed-item">
+									<div class="embed-item" data-name="<?php echo esc_attr($block['name']); ?>">
 										<div class="embed-header">
 											<?php if (isset($block_details['logo'])) : ?>
 												<div class="embed-logo">
@@ -526,6 +566,12 @@ function s4_blocks_render_admin_page() {
 			align-items: center;
 			gap: 10px;
 		}
+		
+		.category-count {
+			font-size: 14px;
+			color: #666;
+			font-weight: normal;
+		}
 
 		.category-content {
 			padding: 15px;
@@ -580,13 +626,61 @@ function s4_blocks_render_admin_page() {
 		.embed-actions {
 			display: flex;
 			gap: 10px;
+			align-items: center;
+		}
+		
+		.embed-view-toggle {
+			display: flex;
+			margin-left: 10px;
+		}
+		
+		.embed-view-toggle .button {
+			padding: 0;
+			width: 36px;
+			height: 36px;
+			display: flex;
+			align-items: center;
+			justify-content: center;
+		}
+		
+		.embed-view-toggle .button.active {
+			background-color: #2196F3;
+			color: white;
+			border-color: #0073aa;
 		}
 
 		.embed-grid {
+			margin-top: 20px;
+		}
+		
+		.embed-grid.view-mode-grid {
 			display: grid;
 			grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
 			gap: 20px;
-			margin-top: 20px;
+		}
+		
+		.embed-grid.view-mode-list .embed-item {
+			margin-bottom: 15px;
+		}
+		
+		.embed-grid.view-mode-list .embed-header {
+			padding: 10px 15px;
+		}
+		
+		.embed-grid.view-mode-list .embed-details {
+			padding: 10px 15px;
+			display: flex;
+			align-items: center;
+			justify-content: space-between;
+		}
+		
+		.embed-grid.view-mode-list .embed-description {
+			margin-bottom: 0;
+			flex-grow: 1;
+		}
+		
+		.embed-grid.view-mode-list .embed-code {
+			margin-left: 20px;
 		}
 
 		.embed-item {
@@ -661,8 +755,17 @@ function s4_blocks_render_admin_page() {
 
 		/* Responsive styles */
 		@media screen and (max-width: 782px) {
-			.embed-grid {
+			.embed-grid.view-mode-grid {
 				grid-template-columns: 1fr;
+			}
+			
+			.embed-actions {
+				flex-wrap: wrap;
+			}
+			
+			.embed-view-toggle {
+				margin-top: 10px;
+				margin-left: 0;
 			}
 		}
 	</style>
@@ -724,6 +827,19 @@ function s4_blocks_render_admin_page() {
 				var text = $(this).text().toLowerCase();
 				$(this).toggle(text.indexOf(value) > -1);
 			});
+		});
+		
+		// Changer la vue des embeds
+		$('.view-grid').on('click', function() {
+			$(this).addClass('active');
+			$('.view-list').removeClass('active');
+			$('.embed-grid').removeClass('view-mode-list').addClass('view-mode-grid');
+		});
+		
+		$('.view-list').on('click', function() {
+			$(this).addClass('active');
+			$('.view-grid').removeClass('active');
+			$('.embed-grid').removeClass('view-mode-grid').addClass('view-mode-list');
 		});
 	});
 	</script>
