@@ -1,1 +1,81 @@
-!function e(){if("undefined"==typeof jQuery)return console.error("jQuery not loaded yet, retrying in 100ms"),void setTimeout(e,100);jQuery(document).ready((function(e){console.log("jQuery is loaded, initializing carousel"),void 0!==e.fn.owlCarousel?e(".s4_block_carousel").each((function(){const o=e(this),n=o.data("carousel-options")||{},a={items:1,loop:!0,margin:10,nav:!0,dots:!0,autoplay:!0,autoplayTimeout:5e3,autoplayHoverPause:!0,mouseDrag:!0,pullDrag:!0,freeDrag:!1,touchDrag:!0,smartSpeed:500,overflowHidden:!0,responsive:{0:{items:1,nav:n.nav},600:{items:2,nav:n.nav},1e3:{items:3,nav:n.nav}},...n};o.owlCarousel(a);const r=o.find(".owl-stage-outer");r.length&&r.css("overflow",a.overflowHidden?"hidden":"visible")})):console.error("Owl Carousel not loaded")}))}();
+/******/ (() => { // webpackBootstrap
+/*!*****************************************!*\
+  !*** ./src/s4-globals-blocks-2/view.js ***!
+  \*****************************************/
+// view.js - Compatible avec wp-env
+(function () {
+  // Attendre que jQuery soit complètement chargé et disponible
+  function initCarousel() {
+    if (typeof jQuery === 'undefined') {
+      console.error('jQuery not loaded yet, retrying in 100ms');
+      setTimeout(initCarousel, 100);
+      return;
+    }
+    jQuery(document).ready(function ($) {
+      console.log('jQuery is loaded, initializing carousel');
+      if (typeof $.fn.owlCarousel === 'undefined') {
+        console.error('Owl Carousel not loaded');
+        return;
+      }
+
+      // Initialize each carousel with its own options
+      $('.s4_block_carousel').each(function () {
+        const $carousel = $(this);
+        const options = $carousel.data('carousel-options') || {};
+
+        // Default options as fallback
+        const defaultOptions = {
+          items: 1,
+          loop: true,
+          margin: 10,
+          nav: true,
+          dots: true,
+          autoplay: true,
+          autoplayTimeout: 5000,
+          autoplayHoverPause: true,
+          mouseDrag: true,
+          pullDrag: true,
+          freeDrag: false,
+          touchDrag: true,
+          smartSpeed: 500,
+          overflowHidden: true,
+          responsive: {
+            0: {
+              items: 1,
+              nav: options.nav
+            },
+            600: {
+              items: 2,
+              nav: options.nav
+            },
+            1000: {
+              items: 3,
+              nav: options.nav
+            }
+          }
+        };
+
+        // Merge default options with saved options
+        const carouselOptions = {
+          ...defaultOptions,
+          ...options
+        };
+
+        // Initialize the carousel with the merged options
+        $carousel.owlCarousel(carouselOptions);
+
+        // Apply overflow style after initialization
+        const stageOuter = $carousel.find('.owl-stage-outer');
+        if (stageOuter.length) {
+          stageOuter.css('overflow', carouselOptions.overflowHidden ? 'hidden' : 'visible');
+        }
+      });
+    });
+  }
+
+  // Démarrer l'initialisation
+  initCarousel();
+})();
+/******/ })()
+;
+//# sourceMappingURL=view.js.map

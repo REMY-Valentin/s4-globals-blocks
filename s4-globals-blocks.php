@@ -135,6 +135,7 @@ function s4_blocks_render_admin_page() {
 		$blocks_by_category[$category][] = array(
 			'name' => $block_name,
 			'title' => $block->title ?: $block_name,
+			'description' => $block->description ?: '',
 			'enabled' => in_array($block_name, $enabled_blocks)
 		);
 	}
@@ -145,6 +146,166 @@ function s4_blocks_render_admin_page() {
 		$b_order = isset($category_order[$b]) ? $category_order[$b] : 999;
 		return $a_order - $b_order;
 	});
+
+	// Informations détaillées sur les embeds
+	$embed_details = array(
+		'core/embed' => array(
+			'description' => 'Intégrer du contenu à partir de n\'importe quelle URL',
+			'icon' => 'dashicons-embed-generic',
+		),
+		'core/youtube' => array(
+			'description' => 'Intégrer une vidéo YouTube',
+			'icon' => 'dashicons-video-alt3',
+			'logo' => 'https://www.youtube.com/favicon.ico',
+		),
+		'core/vimeo' => array(
+			'description' => 'Intégrer une vidéo Vimeo',
+			'icon' => 'dashicons-video-alt3',
+			'logo' => 'https://vimeo.com/favicon.ico',
+		),
+		'core/twitter' => array(
+			'description' => 'Intégrer un tweet ou un profil Twitter/X',
+			'icon' => 'dashicons-twitter',
+			'logo' => 'https://twitter.com/favicon.ico',
+		),
+		'core/facebook' => array(
+			'description' => 'Intégrer un post ou une page Facebook',
+			'icon' => 'dashicons-facebook',
+			'logo' => 'https://facebook.com/favicon.ico',
+		),
+		'core/instagram' => array(
+			'description' => 'Intégrer un post Instagram',
+			'icon' => 'dashicons-instagram',
+			'logo' => 'https://www.instagram.com/favicon.ico',
+		),
+		'core/wordpress' => array(
+			'description' => 'Intégrer un article ou une page WordPress',
+			'icon' => 'dashicons-wordpress',
+			'logo' => 'https://s.w.org/favicon.ico',
+		),
+		'core/soundcloud' => array(
+			'description' => 'Intégrer un morceau ou une playlist SoundCloud',
+			'icon' => 'dashicons-format-audio',
+			'logo' => 'https://soundcloud.com/favicon.ico',
+		),
+		'core/spotify' => array(
+			'description' => 'Intégrer une piste, un album ou une playlist Spotify',
+			'icon' => 'dashicons-format-audio',
+			'logo' => 'https://open.spotify.com/favicon.ico',
+		),
+		'core/flickr' => array(
+			'description' => 'Intégrer des images depuis Flickr',
+			'icon' => 'dashicons-format-image',
+			'logo' => 'https://www.flickr.com/favicon.ico',
+		),
+		'core/animoto' => array(
+			'description' => 'Intégrer une vidéo Animoto',
+			'icon' => 'dashicons-video-alt3',
+		),
+		'core/cloudup' => array(
+			'description' => 'Intégrer du contenu depuis Cloudup',
+			'icon' => 'dashicons-cloud',
+		),
+		'core/dailymotion' => array(
+			'description' => 'Intégrer une vidéo Dailymotion',
+			'icon' => 'dashicons-video-alt3',
+			'logo' => 'https://www.dailymotion.com/favicon.ico',
+		),
+		'core/funnyordie' => array(
+			'description' => 'Intégrer une vidéo Funny or Die',
+			'icon' => 'dashicons-video-alt3',
+		),
+		'core/hulu' => array(
+			'description' => 'Intégrer du contenu depuis Hulu',
+			'icon' => 'dashicons-video-alt3',
+			'logo' => 'https://www.hulu.com/favicon.ico',
+		),
+		'core/imgur' => array(
+			'description' => 'Intégrer des images depuis Imgur',
+			'icon' => 'dashicons-format-image',
+			'logo' => 'https://imgur.com/favicon.ico',
+		),
+		'core/issuu' => array(
+			'description' => 'Intégrer des publications depuis Issuu',
+			'icon' => 'dashicons-book',
+			'logo' => 'https://issuu.com/favicon.ico',
+		),
+		'core/kickstarter' => array(
+			'description' => 'Intégrer une campagne Kickstarter',
+			'icon' => 'dashicons-money',
+			'logo' => 'https://www.kickstarter.com/favicon.ico',
+		),
+		'core/meetup-com' => array(
+			'description' => 'Intégrer un événement ou un groupe Meetup',
+			'icon' => 'dashicons-groups',
+			'logo' => 'https://www.meetup.com/favicon.ico',
+		),
+		'core/mixcloud' => array(
+			'description' => 'Intégrer du contenu audio depuis Mixcloud',
+			'icon' => 'dashicons-format-audio',
+			'logo' => 'https://www.mixcloud.com/favicon.ico',
+		),
+		'core/reddit' => array(
+			'description' => 'Intégrer un post ou un subreddit Reddit',
+			'icon' => 'dashicons-share',
+			'logo' => 'https://www.reddit.com/favicon.ico',
+		),
+		'core/reverbnation' => array(
+			'description' => 'Intégrer un profil ou une piste ReverbNation',
+			'icon' => 'dashicons-format-audio',
+		),
+		'core/screencast' => array(
+			'description' => 'Intégrer un screencast',
+			'icon' => 'dashicons-desktop',
+		),
+		'core/scribd' => array(
+			'description' => 'Intégrer un document Scribd',
+			'icon' => 'dashicons-media-document',
+			'logo' => 'https://www.scribd.com/favicon.ico',
+		),
+		'core/slideshare' => array(
+			'description' => 'Intégrer une présentation SlideShare',
+			'icon' => 'dashicons-slides',
+			'logo' => 'https://www.slideshare.net/favicon.ico',
+		),
+		'core/smugmug' => array(
+			'description' => 'Intégrer des images depuis SmugMug',
+			'icon' => 'dashicons-format-image',
+		),
+		'core/speaker-deck' => array(
+			'description' => 'Intégrer une présentation Speaker Deck',
+			'icon' => 'dashicons-slides',
+		),
+		'core/tiktok' => array(
+			'description' => 'Intégrer une vidéo TikTok',
+			'icon' => 'dashicons-video-alt3',
+			'logo' => 'https://www.tiktok.com/favicon.ico',
+		),
+		'core/ted' => array(
+			'description' => 'Intégrer une conférence TED',
+			'icon' => 'dashicons-video-alt3',
+			'logo' => 'https://www.ted.com/favicon.ico',
+		),
+		'core/tumblr' => array(
+			'description' => 'Intégrer un post Tumblr',
+			'icon' => 'dashicons-admin-site',
+			'logo' => 'https://www.tumblr.com/favicon.ico',
+		),
+		'core/videopress' => array(
+			'description' => 'Intégrer une vidéo VideoPress',
+			'icon' => 'dashicons-video-alt3',
+		),
+		'core/wordpress-tv' => array(
+			'description' => 'Intégrer une vidéo WordPress.tv',
+			'icon' => 'dashicons-video-alt3',
+			'logo' => 'https://wordpress.tv/favicon.ico',
+		),
+		'core/amazon-kindle' => array(
+			'description' => 'Intégrer un livre Kindle',
+			'icon' => 'dashicons-book',
+			'logo' => 'https://www.amazon.com/favicon.ico',
+		),
+	);
 
 	?>
 	<div class="wrap">
@@ -159,9 +320,11 @@ function s4_blocks_render_admin_page() {
 		<form method="post" action="<?php echo admin_url('admin-post.php'); ?>">
 			<input type="hidden" name="action" value="save_s4_blocks">
 			<?php wp_nonce_field('s4_blocks_settings_nonce'); ?>
-
+			<p class="submit">
+				<input type="submit" class="button button-primary" value="Enregistrer les modifications">
+			</p>
 			<?php foreach ($blocks_by_category as $category => $blocks) : ?>
-				<div class="category-section">
+				<div class="category-section <?php echo $category === 'embed' ? 'active' : ''; ?>">
 					<div class="category-header">
 						<h2 class="category-title">
 							<span class="dashicons dashicons-arrow-down-alt2"></span>
@@ -186,23 +349,41 @@ function s4_blocks_render_admin_page() {
 					</div>
 
 					<div class="category-content">
-						<table class="wp-list-table widefat fixed striped">
-							<thead>
-								<tr>
-									<th>Bloc</th>
-									<th>Status</th>
-								</tr>
-							</thead>
-							<tbody>
+						<?php if ($category === 'embed') : ?>
+							<div class="embed-description">
+								<p>Les embeds permettent d'intégrer du contenu externe dans vos pages. Choisissez les services que vous souhaitez autoriser.</p>
+							</div>
+							<div class="embed-toolbar">
+								<div class="embed-search">
+									<input type="text" id="embed-filter" placeholder="Rechercher un service..." />
+									<span class="dashicons dashicons-search"></span>
+								</div>
+								<div class="embed-actions">
+									<button type="button" class="button select-all-embeds" data-category="embed">Tout sélectionner</button>
+									<button type="button" class="button deselect-all-embeds" data-category="embed">Tout désélectionner</button>
+								</div>
+							</div>
+							<div class="embed-grid">
 								<?php foreach ($blocks as $block) : ?>
-									<tr>
-										<td>
-											<?php echo esc_html($block['title']); ?>
-											<br>
-											<small><code><?php echo esc_html($block['name']); ?></code></small>
-										</td>
-										<td>
-											<label class="switch">
+									<?php 
+										$block_details = isset($embed_details[$block['name']]) ? $embed_details[$block['name']] : array(
+											'description' => $block['description'],
+											'icon' => 'dashicons-embed-generic'
+										);
+									?>
+									<div class="embed-item">
+										<div class="embed-header">
+											<?php if (isset($block_details['logo'])) : ?>
+												<div class="embed-logo">
+													<img src="<?php echo esc_url($block_details['logo']); ?>" alt="<?php echo esc_attr($block['title']); ?>" />
+												</div>
+											<?php else : ?>
+												<div class="embed-icon">
+													<span class="dashicons <?php echo esc_attr($block_details['icon']); ?>"></span>
+												</div>
+											<?php endif; ?>
+											<div class="embed-title"><?php echo esc_html($block['title']); ?></div>
+											<label class="switch embed-switch">
 												<input type="checkbox" 
 													   name="enabled_blocks[]" 
 													   value="<?php echo esc_attr($block['name']); ?>"
@@ -211,11 +392,54 @@ function s4_blocks_render_admin_page() {
 													   <?php echo $block['enabled'] ? 'checked' : ''; ?>>
 												<span class="slider round"></span>
 											</label>
-										</td>
-									</tr>
+										</div>
+										<div class="embed-details">
+											<div class="embed-description">
+												<?php echo esc_html($block_details['description']); ?>
+											</div>
+											<div class="embed-code">
+												<code><?php echo esc_html($block['name']); ?></code>
+											</div>
+										</div>
+									</div>
 								<?php endforeach; ?>
-							</tbody>
-						</table>
+							</div>
+						<?php else : ?>
+							<table class="wp-list-table widefat fixed striped">
+								<thead>
+									<tr>
+										<th>Bloc</th>
+										<th>Status</th>
+									</tr>
+								</thead>
+								<tbody>
+									<?php foreach ($blocks as $block) : ?>
+										<tr>
+											<td>
+												<?php echo esc_html($block['title']); ?>
+												<br>
+												<small><code><?php echo esc_html($block['name']); ?></code></small>
+												<?php if (!empty($block['description'])) : ?>
+													<br>
+													<small class="description"><?php echo esc_html($block['description']); ?></small>
+												<?php endif; ?>
+											</td>
+											<td>
+												<label class="switch">
+													<input type="checkbox" 
+														   name="enabled_blocks[]" 
+														   value="<?php echo esc_attr($block['name']); ?>"
+														   class="block-toggle"
+														   data-category="<?php echo esc_attr($category); ?>"
+														   <?php echo $block['enabled'] ? 'checked' : ''; ?>>
+													<span class="slider round"></span>
+												</label>
+											</td>
+										</tr>
+									<?php endforeach; ?>
+								</tbody>
+							</table>
+						<?php endif; ?>
 					</div>
 				</div>
 			<?php endforeach; ?>
@@ -321,6 +545,126 @@ function s4_blocks_render_admin_page() {
 		.switch input:not(:checked) + .slider {
 			background-color: #ccc;
 		}
+
+		/* Styles spécifiques pour les embeds */
+		.embed-toolbar {
+			display: flex;
+			justify-content: space-between;
+			align-items: center;
+			margin-bottom: 20px;
+			flex-wrap: wrap;
+			gap: 15px;
+		}
+		
+		.embed-search {
+			position: relative;
+			flex-grow: 1;
+			max-width: 400px;
+		}
+		
+		.embed-search input {
+			width: 100%;
+			padding: 8px 12px 8px 35px;
+			border-radius: 4px;
+			border: 1px solid #ddd;
+		}
+		
+		.embed-search .dashicons {
+			position: absolute;
+			left: 10px;
+			top: 50%;
+			transform: translateY(-50%);
+			color: #666;
+		}
+		
+		.embed-actions {
+			display: flex;
+			gap: 10px;
+		}
+
+		.embed-grid {
+			display: grid;
+			grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+			gap: 20px;
+			margin-top: 20px;
+		}
+
+		.embed-item {
+			border: 1px solid #ddd;
+			border-radius: 5px;
+			overflow: hidden;
+			transition: all 0.3s ease;
+			background: #fff;
+			box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+		}
+
+		.embed-item:hover {
+			box-shadow: 0 3px 6px rgba(0,0,0,0.2);
+			transform: translateY(-2px);
+		}
+
+		.embed-header {
+			padding: 15px;
+			background: #f9f9f9;
+			border-bottom: 1px solid #eee;
+			display: flex;
+			align-items: center;
+			gap: 10px;
+		}
+
+		.embed-logo img {
+			width: 24px;
+			height: 24px;
+			object-fit: contain;
+		}
+
+		.embed-icon {
+			width: 24px;
+			height: 24px;
+			display: flex;
+			align-items: center;
+			justify-content: center;
+		}
+
+		.embed-title {
+			flex-grow: 1;
+			font-weight: 600;
+		}
+
+		.embed-details {
+			padding: 15px;
+		}
+
+		.embed-description {
+			margin-bottom: 10px;
+			color: #666;
+		}
+
+		.embed-code {
+			background: #f5f5f5;
+			padding: 5px;
+			border-radius: 3px;
+			font-size: 12px;
+		}
+
+		.embed-switch {
+			margin: 0;
+		}
+
+		.embed-description p {
+			font-size: 14px;
+			margin-bottom: 15px;
+			background: #f8f8f8;
+			padding: 10px;
+			border-left: 4px solid #2196F3;
+		}
+
+		/* Responsive styles */
+		@media screen and (max-width: 782px) {
+			.embed-grid {
+				grid-template-columns: 1fr;
+			}
+		}
 	</style>
 
 	<script>
@@ -357,6 +701,29 @@ function s4_blocks_render_admin_page() {
 		$('.block-toggle').on('change', function() {
 			var category = $(this).data('category');
 			updateMasterToggle(category);
+		});
+
+		// Sélectionner tous les embeds
+		$('.select-all-embeds').on('click', function() {
+			var category = $(this).data('category');
+			$(`.block-toggle[data-category="${category}"]`).prop('checked', true);
+			updateMasterToggle(category);
+		});
+		
+		// Désélectionner tous les embeds
+		$('.deselect-all-embeds').on('click', function() {
+			var category = $(this).data('category');
+			$(`.block-toggle[data-category="${category}"]`).prop('checked', false);
+			updateMasterToggle(category);
+		});
+
+		// Filtre des embeds
+		$('#embed-filter').on('keyup', function() {
+			var value = $(this).val().toLowerCase();
+			$('.embed-item').filter(function() {
+				var text = $(this).text().toLowerCase();
+				$(this).toggle(text.indexOf(value) > -1);
+			});
 		});
 	});
 	</script>

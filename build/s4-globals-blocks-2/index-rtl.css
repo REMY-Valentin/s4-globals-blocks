@@ -1,1 +1,55 @@
-.wp-block-s4-globals-blocks-s4-globals-blocks{margin:20px 0;position:relative}.wp-block-s4-globals-blocks-s4-globals-blocks .owl-stage-outer{height:100%}.wp-block-s4-globals-blocks-s4-globals-blocks .owl-stage{align-items:center;display:flex;height:100%}.wp-block-s4-globals-blocks-s4-globals-blocks .owl-item{align-items:center;display:flex;height:100%;justify-content:center}.wp-block-s4-globals-blocks-s4-globals-blocks .owl-item .item{height:100%;width:100%}.wp-block-s4-globals-blocks-s4-globals-blocks .owl-item .item img{height:100%;-o-object-fit:cover;object-fit:cover;width:100%}.wp-block-s4-globals-blocks-s4-globals-blocks .owl-nav.disabled{display:none}.wp-block-s4-globals-blocks-s4-globals-blocks .owl-carousel:empty{align-items:center;background-color:#f9f9f9;border:2px dashed #ccc;display:flex;justify-content:center;min-height:200px;position:relative}.wp-block-s4-globals-blocks-s4-globals-blocks .owl-carousel:empty:before{color:#666;content:"Aucune image sélectionnée";font-size:14px;font-style:italic}
+/*!************************************************************************************************************************************************************************************************************************************************************!*\
+  !*** css ./node_modules/css-loader/dist/cjs.js??ruleSet[1].rules[4].use[1]!./node_modules/postcss-loader/dist/cjs.js??ruleSet[1].rules[4].use[2]!./node_modules/sass-loader/dist/cjs.js??ruleSet[1].rules[4].use[3]!./src/s4-globals-blocks-2/editor.scss ***!
+  \************************************************************************************************************************************************************************************************************************************************************/
+@charset "UTF-8";
+/**
+ * The following styles get applied inside the editor only.
+ *
+ * Replace them with your own styles or remove the file completely.
+ */
+.wp-block-s4-globals-blocks-s4-globals-blocks {
+  margin: 20px 0;
+  position: relative;
+}
+.wp-block-s4-globals-blocks-s4-globals-blocks .owl-stage-outer {
+  height: 100%;
+}
+.wp-block-s4-globals-blocks-s4-globals-blocks .owl-stage {
+  display: flex;
+  align-items: center;
+  height: 100%;
+}
+.wp-block-s4-globals-blocks-s4-globals-blocks .owl-item {
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.wp-block-s4-globals-blocks-s4-globals-blocks .owl-item .item {
+  width: 100%;
+  height: 100%;
+}
+.wp-block-s4-globals-blocks-s4-globals-blocks .owl-item .item img {
+  width: 100%;
+  height: 100%;
+  -o-object-fit: cover;
+     object-fit: cover;
+}
+.wp-block-s4-globals-blocks-s4-globals-blocks .owl-nav.disabled {
+  display: none;
+}
+.wp-block-s4-globals-blocks-s4-globals-blocks .owl-carousel:empty {
+  border: 2px dashed #ccc;
+  min-height: 200px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: #f9f9f9;
+  position: relative;
+}
+.wp-block-s4-globals-blocks-s4-globals-blocks .owl-carousel:empty::before {
+  content: "Aucune image sélectionnée";
+  color: #666;
+  font-size: 14px;
+  font-style: italic;
+}
