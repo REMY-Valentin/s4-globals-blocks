@@ -1,7 +1,8 @@
 <?php
+
 /**
  * Plugin Name:       S4 globals blocks
- * Description:       Example block scaffolded with Create Block tool.
+ * Description:       
  * Version:           0.1.0
  * Requires at least: 6.7
  * Requires PHP:      7.4
@@ -13,7 +14,7 @@
  * @package S4GlobalsBlocks
  */
 
-if ( ! defined( 'ABSPATH' ) ) {
+if (! defined('ABSPATH')) {
 	exit; // Exit if accessed directly.
 }
 
@@ -24,16 +25,30 @@ if ( ! defined( 'ABSPATH' ) ) {
  *
  * @see https://developer.wordpress.org/reference/functions/register_block_type/
  */
-function s4_globals_blocks_s4_globals_blocks_block_init() {
-	register_block_type( __DIR__ . '/build/s4-globals-blocks' );
-	register_block_type( __DIR__ . '/build/s4-buttons' );
+function s4_globals_blocks_s4_globals_blocks_block_init()
+{
+	register_block_type(__DIR__ . '/build/s4-globals-blocks');
+	register_block_type(__DIR__ . '/build/s4-buttons');
 }
-add_action( 'init', 's4_globals_blocks_s4_globals_blocks_block_init' );
+add_action('init', 's4_globals_blocks_s4_globals_blocks_block_init');
+
+// Include required files
+require_once plugin_dir_path(__FILE__) . 'includes/class-s4-theme-json-handler.php';
+require_once plugin_dir_path(__FILE__) . 'includes/class-s4-block-styles-registrar.php';
+
+// Initialize block styles registrar
+function s4_init_block_styles()
+{
+	// Always load and register block styles for all users
+	new S4_Block_Styles_Registrar();
+}
+add_action('init', 's4_init_block_styles');
 
 
 
 // Ajouter le menu d'administration
-function s4_blocks_add_admin_menu() {
+function s4_blocks_add_admin_menu()
+{
 	// Vérifier si l'utilisateur est admin et a un email @section4.fr
 	$user = wp_get_current_user();
 	//if (
@@ -52,11 +67,21 @@ function s4_blocks_add_admin_menu() {
 		'dashicons-block-default', // Icône
 		81 // Position
 	);
+
+	// Add a tab for block styles management
+	add_submenu_page(
+		's4-blocks-manager', // Parent slug
+		'Styles des blocs', // Page title
+		'Styles des blocs', // Menu title
+		'manage_options', // Capability
+		's4-block-styles', // Menu slug
+		's4_blocks_render_styles_page' // Function to display the page
+	);
 }
 add_action('admin_menu', 's4_blocks_add_admin_menu');
-
 // Sauvegarder les paramètres
-function s4_blocks_save_settings() {
+function s4_blocks_save_settings()
+{
 	if (!current_user_can('manage_options')) {
 		wp_die('Accès refusé');
 	}
@@ -72,10 +97,10 @@ function s4_blocks_save_settings() {
 	if (isset($_POST['embed_variations_submitted'])) {
 		// Enregistrement d'un log pour débogage
 		error_log('embed_variations_submitted est présent: ' . $_POST['embed_variations_submitted']);
-		
+
 		// S'assurer qu'on a toujours un tableau, même vide
 		$enabled_embed_variations = isset($_POST['enabled_embed_variations']) ? (array) $_POST['enabled_embed_variations'] : array();
-		
+
 		// Liste de référence des variations avec leurs noms standardisés
 		$standardized_variations = array(
 			'twitter' => 'twitter',
@@ -117,7 +142,7 @@ function s4_blocks_save_settings() {
 			'pinterest' => 'pinterest',
 			'bluesky' => 'bluesky'
 		);
-		
+
 		// Standardiser les noms des variations
 		$standardized_enabled_variations = array();
 		foreach ($enabled_embed_variations as $variation) {
@@ -128,17 +153,17 @@ function s4_blocks_save_settings() {
 				$standardized_enabled_variations[] = $variation;
 			}
 		}
-		
+
 		// Enlever les doublons
 		$standardized_enabled_variations = array_unique($standardized_enabled_variations);
-		
+
 		// Enregistrer l'option
 		update_option('s4_enabled_embed_variations', $standardized_enabled_variations);
-		
+
 		// Enregistrer l'état du bloc embed principal (activé/désactivé)
 		$embed_master_status = isset($_POST['embed_master_status']) ? $_POST['embed_master_status'] : '0';
 		update_option('s4_embed_master_status', $embed_master_status);
-		
+
 		// Log pour débogage
 		error_log('Nombre de variations activées: ' . count($standardized_enabled_variations));
 		error_log('État du bloc embed: ' . $embed_master_status);
@@ -153,136 +178,168 @@ function s4_blocks_save_settings() {
 add_action('admin_post_save_s4_blocks', 's4_blocks_save_settings');
 
 // Gérer les blocs activés
-function s4_blocks_disable_blocks($allowed_blocks) {
+function s4_blocks_disable_blocks($allowed_blocks)
+{
 	// Si allowed_blocks est true, récupérer tous les blocs enregistrés
 	if ($allowed_blocks === true) {
 		$registry = WP_Block_Type_Registry::get_instance();
 		$all_blocks = array_keys($registry->get_all_registered());
-		
+
 		// Récupérer les blocs activés, si l'option n'existe pas encore, activer tous les blocs
 		$enabled_blocks = get_option('s4_enabled_blocks', $all_blocks);
-		
+
 		// Si l'option existe mais est vide, activer tous les blocs
 		if (empty($enabled_blocks)) {
 			return $all_blocks;
 		}
-		
+
 		// S'assurer que core/embed est toujours présent dans les blocs activés
 		if (!in_array('core/embed', $enabled_blocks)) {
 			$enabled_blocks[] = 'core/embed';
 		}
-		
+
 		// Retourner les blocs activés
 		return $enabled_blocks;
 	}
-	
+
 	return $allowed_blocks;
 }
 add_filter('allowed_block_types_all', 's4_blocks_disable_blocks');
 
 // Désactiver les variations d'embeds spécifiques
-function s4_blocks_disable_embed_variations() {
-    // Vérifier si le bloc embed principal est activé
-    $embed_master_status = get_option('s4_embed_master_status', '1');
-    
-    // Générer le code JavaScript pour désactiver les variations d'embed
-    $enabled_variations = get_option('s4_enabled_embed_variations', array());
-    
-    // Liste complète des variations d'embed possibles dans WordPress
-    $all_embed_variations = array(
-        'twitter', 'youtube', 'facebook', 'instagram', 'wordpress', 
-        'soundcloud', 'spotify', 'flickr', 'vimeo', 'animoto', 
-        'cloudup', 'dailymotion', 'collegehumor', 'funnyordie', 'hulu', 'imgur', 
-        'issuu', 'kickstarter', 'meetup', 'mixcloud', 'reddit',
-        'reverbnation', 'screencast', 'scribd', 'slideshare', 
-        'smugmug', 'speaker-deck', 'tiktok', 'ted', 'tumblr', 
-        'videopress', 'wordpress-tv', 'amazon-kindle', 'crowdsignal', 
-        'pocket-casts', 'pinterest', 'bluesky'
-    );
-    
-    $script = "wp.domReady(function() {\n";
-    
-    // Obtenir toutes les variations disponibles
-    $script .= "    var allVariations = wp.blocks.getBlockVariations('core/embed');\n";
-    
-    // Si le bloc embed est désactivé, désactiver également le bloc principal
-    // mais seulement dans l'interface utilisateur, pas dans la registration du bloc
-    if ($embed_master_status === '0') {
-        $script .= "    // Désactiver complètement le bloc embed en le masquant\n";
-        $script .= "    wp.data.dispatch('core/edit-post').hideBlockTypes(['core/embed']);\n";
-    } else {
-        $script .= "    // S'assurer que le bloc embed est visible\n";
-        $script .= "    wp.data.dispatch('core/edit-post').showBlockTypes(['core/embed']);\n";
-        
-        // Déterminer quelles variations désactiver
-        $variations_to_disable = array_diff($all_embed_variations, $enabled_variations);
-        
-        if (!empty($variations_to_disable)) {
-            $script .= "    var availableVariations = wp.blocks.getBlockVariations('core/embed').map(function(v) { return v.name; });\n";
-            
-            // Ajouter l'approche universelle: désactiver toutes les variations sauf celles explicitement activées
-            $script .= "    var enabledVariations = " . json_encode($enabled_variations) . ";\n";
-            $script .= "    var availableVariationsDetailed = wp.blocks.getBlockVariations('core/embed');\n";
-            
-            // Créer une fonction pour vérifier si une variation est activée
-            $script .= "    function isVariationEnabled(variation) {\n";
-            $script .= "        // Vérifier par nom exact\n";
-            $script .= "        if (enabledVariations.includes(variation.name)) return true;\n";
-            $script .= "        \n";
-            $script .= "        // Vérifier par provider slug si disponible\n";
-            $script .= "        if (variation.attributes && variation.attributes.providerNameSlug) {\n";
-            $script .= "            if (enabledVariations.includes(variation.attributes.providerNameSlug)) return true;\n";
-            $script .= "        }\n";
-            $script .= "        \n";
-            $script .= "        // Vérifier les alias connus\n";
-            $script .= "        var aliases = {\n";
-            $script .= "            'pocketcasts': 'pocket-casts',\n";
-            $script .= "            'pocket-casts': 'pocketcasts'\n";
-            $script .= "        };\n";
-            $script .= "        \n";
-            $script .= "        if (aliases[variation.name] && enabledVariations.includes(aliases[variation.name])) return true;\n";
-            $script .= "        \n";
-            $script .= "        return false;\n";
-            $script .= "    }\n";
-            
-            // Parcourir toutes les variations disponibles et désactiver celles qui ne sont pas activées
-            $script .= "    availableVariationsDetailed.forEach(function(variation) {\n";
-            $script .= "        if (!isVariationEnabled(variation)) {\n";
-            $script .= "            try {\n";
-            $script .= "                wp.blocks.unregisterBlockVariation('core/embed', variation.name);\n";
-            $script .= "            } catch(e) { }\n";
-            $script .= "        }\n";
-            $script .= "    });\n";
-            
-            // Approche traditionnelle (ciblée) - en complément de l'approche universelle
-            foreach ($variations_to_disable as $variation) {
-                // Ajouter une vérification de l'existence de la variation avant de la désactiver
-                $script .= "    if (availableVariations.includes('$variation')) {\n";
-                $script .= "        try { \n";
-                $script .= "            wp.blocks.unregisterBlockVariation('core/embed', '$variation'); \n";
-                $script .= "        } catch(e) { }\n";
-                $script .= "    }\n";
-            }
-        }
-    }
-    
-    $script .= "});\n";
-    
-    // Enregistrer et inclure le script
-    wp_register_script(
-        's4-disable-embed-variations',
-        '',
-        array('wp-blocks', 'wp-dom-ready', 'wp-data', 'wp-edit-post'),
-        '1.0',
-        true
-    );
-    wp_add_inline_script('s4-disable-embed-variations', $script);
-    wp_enqueue_script('s4-disable-embed-variations');
+function s4_blocks_disable_embed_variations()
+{
+	// Vérifier si le bloc embed principal est activé
+	$embed_master_status = get_option('s4_embed_master_status', '1');
+
+	// Générer le code JavaScript pour désactiver les variations d'embed
+	$enabled_variations = get_option('s4_enabled_embed_variations', array());
+
+	// Liste complète des variations d'embed possibles dans WordPress
+	$all_embed_variations = array(
+		'twitter',
+		'youtube',
+		'facebook',
+		'instagram',
+		'wordpress',
+		'soundcloud',
+		'spotify',
+		'flickr',
+		'vimeo',
+		'animoto',
+		'cloudup',
+		'dailymotion',
+		'collegehumor',
+		'funnyordie',
+		'hulu',
+		'imgur',
+		'issuu',
+		'kickstarter',
+		'meetup',
+		'mixcloud',
+		'reddit',
+		'reverbnation',
+		'screencast',
+		'scribd',
+		'slideshare',
+		'smugmug',
+		'speaker-deck',
+		'tiktok',
+		'ted',
+		'tumblr',
+		'videopress',
+		'wordpress-tv',
+		'amazon-kindle',
+		'crowdsignal',
+		'pocket-casts',
+		'pinterest',
+		'bluesky'
+	);
+
+	$script = "wp.domReady(function() {\n";
+
+	// Obtenir toutes les variations disponibles
+	$script .= "    var allVariations = wp.blocks.getBlockVariations('core/embed');\n";
+
+	// Si le bloc embed est désactivé, désactiver également le bloc principal
+	// mais seulement dans l'interface utilisateur, pas dans la registration du bloc
+	if ($embed_master_status === '0') {
+		$script .= "    // Désactiver complètement le bloc embed en le masquant\n";
+		$script .= "    wp.data.dispatch('core/edit-post').hideBlockTypes(['core/embed']);\n";
+	} else {
+		$script .= "    // S'assurer que le bloc embed est visible\n";
+		$script .= "    wp.data.dispatch('core/edit-post').showBlockTypes(['core/embed']);\n";
+
+		// Déterminer quelles variations désactiver
+		$variations_to_disable = array_diff($all_embed_variations, $enabled_variations);
+
+		if (!empty($variations_to_disable)) {
+			$script .= "    var availableVariations = wp.blocks.getBlockVariations('core/embed').map(function(v) { return v.name; });\n";
+
+			// Ajouter l'approche universelle: désactiver toutes les variations sauf celles explicitement activées
+			$script .= "    var enabledVariations = " . json_encode($enabled_variations) . ";\n";
+			$script .= "    var availableVariationsDetailed = wp.blocks.getBlockVariations('core/embed');\n";
+
+			// Créer une fonction pour vérifier si une variation est activée
+			$script .= "    function isVariationEnabled(variation) {\n";
+			$script .= "        // Vérifier par nom exact\n";
+			$script .= "        if (enabledVariations.includes(variation.name)) return true;\n";
+			$script .= "        \n";
+			$script .= "        // Vérifier par provider slug si disponible\n";
+			$script .= "        if (variation.attributes && variation.attributes.providerNameSlug) {\n";
+			$script .= "            if (enabledVariations.includes(variation.attributes.providerNameSlug)) return true;\n";
+			$script .= "        }\n";
+			$script .= "        \n";
+			$script .= "        // Vérifier les alias connus\n";
+			$script .= "        var aliases = {\n";
+			$script .= "            'pocketcasts': 'pocket-casts',\n";
+			$script .= "            'pocket-casts': 'pocketcasts'\n";
+			$script .= "        };\n";
+			$script .= "        \n";
+			$script .= "        if (aliases[variation.name] && enabledVariations.includes(aliases[variation.name])) return true;\n";
+			$script .= "        \n";
+			$script .= "        return false;\n";
+			$script .= "    }\n";
+
+			// Parcourir toutes les variations disponibles et désactiver celles qui ne sont pas activées
+			$script .= "    availableVariationsDetailed.forEach(function(variation) {\n";
+			$script .= "        if (!isVariationEnabled(variation)) {\n";
+			$script .= "            try {\n";
+			$script .= "                wp.blocks.unregisterBlockVariation('core/embed', variation.name);\n";
+			$script .= "            } catch(e) { }\n";
+			$script .= "        }\n";
+			$script .= "    });\n";
+
+			// Approche traditionnelle (ciblée) - en complément de l'approche universelle
+			foreach ($variations_to_disable as $variation) {
+				// Ajouter une vérification de l'existence de la variation avant de la désactiver
+				$script .= "    if (availableVariations.includes('$variation')) {\n";
+				$script .= "        try { \n";
+				$script .= "            wp.blocks.unregisterBlockVariation('core/embed', '$variation'); \n";
+				$script .= "        } catch(e) { }\n";
+				$script .= "    }\n";
+			}
+		}
+	}
+
+	$script .= "});\n";
+
+	// Enregistrer et inclure le script
+	wp_register_script(
+		's4-disable-embed-variations',
+		'',
+		array('wp-blocks', 'wp-dom-ready', 'wp-data', 'wp-edit-post'),
+		'1.0',
+		true
+	);
+	wp_add_inline_script('s4-disable-embed-variations', $script);
+	wp_enqueue_script('s4-disable-embed-variations');
 }
 add_action('enqueue_block_editor_assets', 's4_blocks_disable_embed_variations');
 
 // Rendu de la page d'administration
-function s4_blocks_render_admin_page() {
+function s4_blocks_render_admin_page()
+{
 	// Vérifier les permissions
 	if (!current_user_can('manage_options')) {
 		wp_die('Accès refusé');
@@ -327,7 +384,7 @@ function s4_blocks_render_admin_page() {
 	}
 
 	// Trier les catégories selon l'ordre défini
-	uksort($blocks_by_category, function($a, $b) use ($category_order) {
+	uksort($blocks_by_category, function ($a, $b) use ($category_order) {
 		$a_order = isset($category_order[$a]) ? $category_order[$a] : 999;
 		$b_order = isset($category_order[$b]) ? $category_order[$b] : 999;
 		return $a_order - $b_order;
@@ -597,22 +654,22 @@ function s4_blocks_render_admin_page() {
 	if (!isset($blocks_by_category['embed'])) {
 		$blocks_by_category['embed'] = array();
 	}
-	
+
 	// Créer une liste des noms de blocs d'embed existants pour éviter les doublons
-	$existing_embed_blocks = array_map(function($block) {
+	$existing_embed_blocks = array_map(function ($block) {
 		return $block['name'];
 	}, $blocks_by_category['embed']);
-	
+
 	// Récupérer les variations d'embed activées
 	$enabled_embed_variations = get_option('s4_enabled_embed_variations', array());
 	// Si cette option n'existe pas encore, activer toutes les variations
 	if (empty($enabled_embed_variations) && get_option('s4_enabled_embed_variations') === false) {
-		$enabled_embed_variations = array_keys(array_filter($embed_details, function($detail) {
+		$enabled_embed_variations = array_keys(array_filter($embed_details, function ($detail) {
 			return isset($detail['is_variation']) && $detail['is_variation'] === true;
 		}));
 		update_option('s4_enabled_embed_variations', $enabled_embed_variations);
 	}
-	
+
 	// Récupérer l'état du bloc embed principal
 	$embed_master_status = get_option('s4_embed_master_status', '1');
 	// Si c'est la première fois, définir une valeur par défaut basée sur les variations
@@ -620,10 +677,10 @@ function s4_blocks_render_admin_page() {
 		$embed_master_status = empty($enabled_embed_variations) ? '0' : '1';
 		update_option('s4_embed_master_status', $embed_master_status);
 	}
-	
+
 	// Créer un tableau séparé pour les variations d'embed
 	$embed_variations = array();
-	
+
 	// Traiter chaque détail d'embed
 	foreach ($embed_details as $key => $details) {
 		// Si c'est une variation, l'ajouter au tableau des variations
@@ -632,7 +689,7 @@ function s4_blocks_render_admin_page() {
 			$display_name = ucfirst($key);
 			// Remplacer les tirets par des espaces
 			$display_name = str_replace('-', ' ', $display_name);
-			
+
 			// Vérifier si cette variation est activée (de manière insensible à la casse)
 			$is_enabled = false;
 			foreach ($enabled_embed_variations as $enabled_variation) {
@@ -641,7 +698,7 @@ function s4_blocks_render_admin_page() {
 					break;
 				}
 			}
-			
+
 			$embed_variations[] = array(
 				'name' => $key,
 				'title' => $display_name,
@@ -650,12 +707,12 @@ function s4_blocks_render_admin_page() {
 				'enabled' => $is_enabled,
 				'details' => $details
 			);
-		} 
+		}
 		// Sinon, si c'est un bloc principal et qu'il n'existe pas déjà, l'ajouter
 		else if (!in_array($key, $existing_embed_blocks)) {
 			// Extraire le nom d'affichage depuis le bloc (ex: "core/embed" devient "Embed")
 			$display_name = ucfirst(str_replace('core/', '', $key));
-			
+
 			$blocks_by_category['embed'][] = array(
 				'name' => $key,
 				'title' => $display_name,
@@ -667,11 +724,11 @@ function s4_blocks_render_admin_page() {
 	}
 
 	// Trier les variations d'embed par ordre alphabétique
-	usort($embed_variations, function($a, $b) {
+	usort($embed_variations, function ($a, $b) {
 		return strcmp($a['title'], $b['title']);
 	});
 
-	?>
+?>
 	<div class="wrap">
 		<h1>Gestion des Blocs Gutenberg</h1>
 
@@ -685,7 +742,7 @@ function s4_blocks_render_admin_page() {
 			<input type="hidden" name="action" value="save_s4_blocks">
 			<input type="hidden" name="embed_variations_submitted" value="1">
 			<?php wp_nonce_field('s4_blocks_settings_nonce'); ?>
-			
+
 			<!-- Block search functionality -->
 			<div class="global-search-container">
 				<div class="block-search">
@@ -696,7 +753,7 @@ function s4_blocks_render_admin_page() {
 					<span id="search-results-count"></span>
 				</div>
 			</div>
-			
+
 			<p class="submit">
 				<input type="submit" class="button button-primary" value="Enregistrer les modifications">
 			</p>
@@ -705,7 +762,7 @@ function s4_blocks_render_admin_page() {
 					<div class="category-header">
 						<h2 class="category-title">
 							<span class="dashicons dashicons-arrow-down-alt2"></span>
-							<?php 
+							<?php
 							$category_display_name = ucfirst($category);
 							if ($category === 'embed') {
 								$category_display_name = 'Embeds';
@@ -719,9 +776,9 @@ function s4_blocks_render_admin_page() {
 							<span class="category-count">(<?php echo count($blocks); ?>)</span>
 						</h2>
 						<label class="switch master-switch">
-							<input type="checkbox" 
-								   class="master-toggle"
-								   data-category="<?php echo esc_attr($category); ?>">
+							<input type="checkbox"
+								class="master-toggle"
+								data-category="<?php echo esc_attr($category); ?>">
 							<span class="slider round"></span>
 						</label>
 					</div>
@@ -738,12 +795,12 @@ function s4_blocks_render_admin_page() {
 									<?php endif; ?>
 								</p>
 							</div>
-							
+
 							<!-- Variations d'embed -->
 							<div class="embed-section">
 								<h3 class="section-title">Variations d'Embed</h3>
 								<p>Les variations permettent d'intégrer des services spécifiques avec un formatage adapté.</p>
-								
+
 								<div class="embed-toolbar">
 									<div class="embed-search">
 										<input type="text" id="embed-filter" placeholder="Rechercher un service..." />
@@ -758,11 +815,11 @@ function s4_blocks_render_admin_page() {
 										</div>
 									</div>
 								</div>
-								
+
 								<div class="embed-grid view-mode-grid">
 									<?php foreach ($embed_variations as $variation) : ?>
-										<?php 
-											$details = $variation['details'];
+										<?php
+										$details = $variation['details'];
 										?>
 										<div class="embed-item" data-name="<?php echo esc_attr($variation['name']); ?>">
 											<div class="embed-header">
@@ -777,12 +834,12 @@ function s4_blocks_render_admin_page() {
 												<?php endif; ?>
 												<div class="embed-title"><?php echo esc_html($variation['title']); ?></div>
 												<label class="switch embed-switch">
-													<input type="checkbox" 
-														   name="enabled_embed_variations[]" 
-														   value="<?php echo esc_attr($variation['name']); ?>"
-														   class="variation-toggle"
-														   data-category="<?php echo esc_attr($category); ?>"
-														   <?php echo $variation['enabled'] ? 'checked' : ''; ?>>
+													<input type="checkbox"
+														name="enabled_embed_variations[]"
+														value="<?php echo esc_attr($variation['name']); ?>"
+														class="variation-toggle"
+														data-category="<?php echo esc_attr($category); ?>"
+														<?php echo $variation['enabled'] ? 'checked' : ''; ?>>
 													<span class="slider round"></span>
 												</label>
 											</div>
@@ -824,12 +881,12 @@ function s4_blocks_render_admin_page() {
 											</td>
 											<td>
 												<label class="switch">
-													<input type="checkbox" 
-														   name="enabled_blocks[]" 
-														   value="<?php echo esc_attr($block['name']); ?>"
-														   class="block-toggle"
-														   data-category="<?php echo esc_attr($category); ?>"
-														   <?php echo $block['enabled'] ? 'checked' : ''; ?>>
+													<input type="checkbox"
+														name="enabled_blocks[]"
+														value="<?php echo esc_attr($block['name']); ?>"
+														class="block-toggle"
+														data-category="<?php echo esc_attr($category); ?>"
+														<?php echo $block['enabled'] ? 'checked' : ''; ?>>
 													<span class="slider round"></span>
 												</label>
 											</td>
@@ -885,11 +942,11 @@ function s4_blocks_render_admin_page() {
 			transition: .4s;
 		}
 
-		.switch input:checked + .slider {
+		.switch input:checked+.slider {
 			background-color: #2196F3;
 		}
 
-		.switch input:checked + .slider:before {
+		.switch input:checked+.slider:before {
 			transform: translateX(26px);
 		}
 
@@ -924,7 +981,7 @@ function s4_blocks_render_admin_page() {
 			align-items: center;
 			gap: 10px;
 		}
-		
+
 		.category-count {
 			font-size: 14px;
 			color: #666;
@@ -946,7 +1003,7 @@ function s4_blocks_render_admin_page() {
 		}
 
 		/* Ajout de styles pour une meilleure visibilité des états */
-		.switch input:not(:checked) + .slider {
+		.switch input:not(:checked)+.slider {
 			background-color: #ccc;
 		}
 
@@ -954,11 +1011,11 @@ function s4_blocks_render_admin_page() {
 			opacity: 0.6;
 			cursor: not-allowed;
 		}
-		
+
 		.switch.disabled .slider {
 			cursor: not-allowed;
 		}
-		
+
 		.notice {
 			color: #0078d4;
 			font-style: italic;
@@ -977,20 +1034,20 @@ function s4_blocks_render_admin_page() {
 			flex-wrap: wrap;
 			gap: 15px;
 		}
-		
+
 		.embed-search {
 			position: relative;
 			flex-grow: 1;
 			max-width: 400px;
 		}
-		
+
 		.embed-search input {
 			width: 100%;
 			padding: 8px 12px 8px 35px;
 			border-radius: 4px;
 			border: 1px solid #ddd;
 		}
-		
+
 		.embed-search .dashicons {
 			position: absolute;
 			left: 10px;
@@ -998,18 +1055,18 @@ function s4_blocks_render_admin_page() {
 			transform: translateY(-50%);
 			color: #666;
 		}
-		
+
 		.embed-actions {
 			display: flex;
 			gap: 10px;
 			align-items: center;
 		}
-		
+
 		.embed-view-toggle {
 			display: flex;
 			margin-left: 10px;
 		}
-		
+
 		.embed-view-toggle .button {
 			padding: 0;
 			width: 36px;
@@ -1018,7 +1075,7 @@ function s4_blocks_render_admin_page() {
 			align-items: center;
 			justify-content: center;
 		}
-		
+
 		.embed-view-toggle .button.active {
 			background-color: #2196F3;
 			color: white;
@@ -1028,33 +1085,33 @@ function s4_blocks_render_admin_page() {
 		.embed-grid {
 			margin-top: 20px;
 		}
-		
+
 		.embed-grid.view-mode-grid {
 			display: grid;
 			grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
 			gap: 20px;
 		}
-		
+
 		.embed-grid.view-mode-list .embed-item {
 			margin-bottom: 15px;
 		}
-		
+
 		.embed-grid.view-mode-list .embed-header {
 			padding: 10px 15px;
 		}
-		
+
 		.embed-grid.view-mode-list .embed-details {
 			padding: 10px 15px;
 			display: flex;
 			align-items: center;
 			justify-content: space-between;
 		}
-		
+
 		.embed-grid.view-mode-list .embed-description {
 			margin-bottom: 0;
 			flex-grow: 1;
 		}
-		
+
 		.embed-grid.view-mode-list .embed-code {
 			margin-left: 20px;
 		}
@@ -1065,11 +1122,11 @@ function s4_blocks_render_admin_page() {
 			overflow: hidden;
 			transition: all 0.3s ease;
 			background: #fff;
-			box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+			box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
 		}
 
 		.embed-item:hover {
-			box-shadow: 0 3px 6px rgba(0,0,0,0.2);
+			box-shadow: 0 3px 6px rgba(0, 0, 0, 0.2);
 			transform: translateY(-2px);
 		}
 
@@ -1135,7 +1192,7 @@ function s4_blocks_render_admin_page() {
 			border-top: 1px solid #eee;
 			padding-top: 15px;
 		}
-		
+
 		.section-title {
 			margin-top: 10px;
 			margin-bottom: 15px;
@@ -1148,11 +1205,11 @@ function s4_blocks_render_admin_page() {
 			.embed-grid.view-mode-grid {
 				grid-template-columns: 1fr;
 			}
-			
+
 			.embed-actions {
 				flex-wrap: wrap;
 			}
-			
+
 			.embed-view-toggle {
 				margin-top: 10px;
 				margin-left: 0;
@@ -1170,13 +1227,13 @@ function s4_blocks_render_admin_page() {
 			border-radius: 4px;
 			border: 1px solid #ddd;
 		}
-		
+
 		.block-search {
 			position: relative;
 			flex-grow: 1;
 			max-width: 600px;
 		}
-		
+
 		.block-search input {
 			width: 100%;
 			padding: 8px 12px 8px 35px;
@@ -1184,7 +1241,7 @@ function s4_blocks_render_admin_page() {
 			border: 1px solid #ddd;
 			font-size: 16px;
 		}
-		
+
 		.block-search .dashicons {
 			position: absolute;
 			left: 10px;
@@ -1192,322 +1249,668 @@ function s4_blocks_render_admin_page() {
 			transform: translateY(-50%);
 			color: #666;
 		}
-		
+
 		.search-info {
 			margin-left: 20px;
 			color: #555;
 			font-style: italic;
 		}
-		
+
 		.highlight-result {
 			background-color: #ffeb3b;
 			padding: 2px;
 		}
-		
+
 		.category-section.no-results {
 			display: none;
 		}
-		
+
 		.category-content tr.hidden-row {
 			display: none;
 		}
 	</style>
 
 	<script>
-	jQuery(document).ready(function($) {
-		// Fonction pour mettre à jour l'état du master toggle pour les embeds
-		function updateMasterToggleEmbed() {
-			var categorySection = $('.category-section:has([data-category="embed"])');
-			var totalToggles = categorySection.find('.variation-toggle').length;
-			var checkedToggles = categorySection.find('.variation-toggle:checked').length;
-			categorySection.find('.master-toggle').prop('checked', checkedToggles === totalToggles);
-		}
-		
-		// Fonction pour mettre à jour l'état du master toggle pour les autres catégories
-		function updateMasterToggle(category) {
-			if (category === 'embed') {
-				updateMasterToggleEmbed();
-				return;
+		jQuery(document).ready(function($) {
+			// Fonction pour mettre à jour l'état du master toggle pour les embeds
+			function updateMasterToggleEmbed() {
+				var categorySection = $('.category-section:has([data-category="embed"])');
+				var totalToggles = categorySection.find('.variation-toggle').length;
+				var checkedToggles = categorySection.find('.variation-toggle:checked').length;
+				categorySection.find('.master-toggle').prop('checked', checkedToggles === totalToggles);
 			}
-			
-			var categorySection = $(`.category-section:has([data-category="${category}"])`);
-			var totalToggles = categorySection.find('.block-toggle').length;
-			var checkedToggles = categorySection.find('.block-toggle:checked').length;
-			categorySection.find('.master-toggle').prop('checked', checkedToggles === totalToggles);
-		}
 
-		// Initialiser les master toggles
-		$('.category-section').each(function() {
-			var category = $(this).find('.master-toggle').data('category');
-			updateMasterToggle(category);
-		});
+			// Fonction pour mettre à jour l'état du master toggle pour les autres catégories
+			function updateMasterToggle(category) {
+				if (category === 'embed') {
+					updateMasterToggleEmbed();
+					return;
+				}
 
-		// Toggle des catégories
-		$('.category-header').on('click', function(e) {
-			if (!$(e.target).is('input, label, .slider')) {
-				$(this).closest('.category-section').toggleClass('active');
+				var categorySection = $(`.category-section:has([data-category="${category}"])`);
+				var totalToggles = categorySection.find('.block-toggle').length;
+				var checkedToggles = categorySection.find('.block-toggle:checked').length;
+				categorySection.find('.master-toggle').prop('checked', checkedToggles === totalToggles);
 			}
-		});
 
-		// Master toggle par catégorie
-		$('.master-toggle').on('change', function() {
-			var category = $(this).data('category');
-			var isChecked = $(this).prop('checked');
-			
-			if (category === 'embed') {
-				// Pour la catégorie embed, on toggle toutes les variations
-				$('.variation-toggle').prop('checked', isChecked);
-				
-				// Mettre à jour l'état visuel du bloc embed principal
-				// Le hidden input reste toujours actif, mais on ajoute une indication visuelle
-				if (isChecked) {
-					$('.embed-description .embed-status-notice').removeClass('notice-warning').addClass('notice-info')
-						.html('<strong>Note:</strong> Le bloc embed principal est activé avec les variations sélectionnées.');
+			// Initialiser les master toggles
+			$('.category-section').each(function() {
+				var category = $(this).find('.master-toggle').data('category');
+				updateMasterToggle(category);
+			});
+
+			// Toggle des catégories
+			$('.category-header').on('click', function(e) {
+				if (!$(e.target).is('input, label, .slider')) {
+					$(this).closest('.category-section').toggleClass('active');
+				}
+			});
+
+			// Master toggle par catégorie
+			$('.master-toggle').on('change', function() {
+				var category = $(this).data('category');
+				var isChecked = $(this).prop('checked');
+
+				if (category === 'embed') {
+					// Pour la catégorie embed, on toggle toutes les variations
+					$('.variation-toggle').prop('checked', isChecked);
+
+					// Mettre à jour l'état visuel du bloc embed principal
+					// Le hidden input reste toujours actif, mais on ajoute une indication visuelle
+					if (isChecked) {
+						$('.embed-description .embed-status-notice').removeClass('notice-warning').addClass('notice-info')
+							.html('<strong>Note:</strong> Le bloc embed principal est activé avec les variations sélectionnées.');
+					} else {
+						$('.embed-description .embed-status-notice').removeClass('notice-info').addClass('notice-warning')
+							.html('<strong>Attention:</strong> Le bloc embed principal est désactivé, mais reste fonctionnel en arrière-plan.');
+					}
+
+					// Mettre à jour le champ caché pour indiquer l'état du bloc embed
+					$('#embed_master_status').val(isChecked ? '1' : '0');
 				} else {
+					// Pour les autres catégories, on toggle les blocs
+					$(`.block-toggle[data-category="${category}"]`).prop('checked', isChecked);
+				}
+			});
+
+			// Toggle individuel pour les blocs
+			$('.block-toggle').on('change', function() {
+				var category = $(this).data('category');
+				updateMasterToggle(category);
+			});
+
+			// Toggle individuel pour les variations d'embed
+			$('.variation-toggle').on('change', function() {
+				updateMasterToggleEmbed();
+
+				// Mettre à jour l'état visuel du bloc embed principal en fonction des variations
+				var allUnchecked = $('.variation-toggle:checked').length === 0;
+				if (allUnchecked) {
 					$('.embed-description .embed-status-notice').removeClass('notice-info').addClass('notice-warning')
 						.html('<strong>Attention:</strong> Le bloc embed principal est désactivé, mais reste fonctionnel en arrière-plan.');
+					$('#embed_master_status').val('0');
+				} else {
+					$('.embed-description .embed-status-notice').removeClass('notice-warning').addClass('notice-info')
+						.html('<strong>Note:</strong> Le bloc embed principal est activé avec les variations sélectionnées.');
+					$('#embed_master_status').val('1');
 				}
-				
-				// Mettre à jour le champ caché pour indiquer l'état du bloc embed
-				$('#embed_master_status').val(isChecked ? '1' : '0');
-			} else {
-				// Pour les autres catégories, on toggle les blocs
-				$(`.block-toggle[data-category="${category}"]`).prop('checked', isChecked);
-			}
-		});
+			});
 
-		// Toggle individuel pour les blocs
-		$('.block-toggle').on('change', function() {
-			var category = $(this).data('category');
-			updateMasterToggle(category);
-		});
-		
-		// Toggle individuel pour les variations d'embed
-		$('.variation-toggle').on('change', function() {
-			updateMasterToggleEmbed();
-			
-			// Mettre à jour l'état visuel du bloc embed principal en fonction des variations
-			var allUnchecked = $('.variation-toggle:checked').length === 0;
-			if (allUnchecked) {
-				$('.embed-description .embed-status-notice').removeClass('notice-info').addClass('notice-warning')
-					.html('<strong>Attention:</strong> Le bloc embed principal est désactivé, mais reste fonctionnel en arrière-plan.');
-				$('#embed_master_status').val('0');
-			} else {
+			// Sélectionner tous les embeds variations
+			$('.select-all-embeds').on('click', function() {
+				$('.variation-toggle').prop('checked', true);
+				updateMasterToggleEmbed();
+
+				// Mettre à jour l'état visuel du bloc embed principal
 				$('.embed-description .embed-status-notice').removeClass('notice-warning').addClass('notice-info')
 					.html('<strong>Note:</strong> Le bloc embed principal est activé avec les variations sélectionnées.');
 				$('#embed_master_status').val('1');
-			}
-		});
 
-		// Sélectionner tous les embeds variations
-		$('.select-all-embeds').on('click', function() {
-			$('.variation-toggle').prop('checked', true);
-			updateMasterToggleEmbed();
-			
-			// Mettre à jour l'état visuel du bloc embed principal
-			$('.embed-description .embed-status-notice').removeClass('notice-warning').addClass('notice-info')
-				.html('<strong>Note:</strong> Le bloc embed principal est activé avec les variations sélectionnées.');
-			$('#embed_master_status').val('1');
-			
-			// Visual feedback
-			$(this).addClass('button-primary').fadeOut(100).fadeIn(100);
-			setTimeout(function() {
-				$('.select-all-embeds').removeClass('button-primary');
-			}, 500);
-		});
+				// Visual feedback
+				$(this).addClass('button-primary').fadeOut(100).fadeIn(100);
+				setTimeout(function() {
+					$('.select-all-embeds').removeClass('button-primary');
+				}, 500);
+			});
 
-		// Désélectionner tous les embeds variations
-		$('.deselect-all-embeds').on('click', function() {
-			$('.variation-toggle').prop('checked', false);
-			updateMasterToggleEmbed();
-			
-			// Mettre à jour l'état visuel du bloc embed principal
-			$('.embed-description .embed-status-notice').removeClass('notice-info').addClass('notice-warning')
-				.html('<strong>Attention:</strong> Le bloc embed principal est désactivé, mais reste fonctionnel en arrière-plan.');
-			$('#embed_master_status').val('0');
-			
-			// Visual feedback
-			$(this).addClass('button-primary').fadeOut(100).fadeIn(100);
-			setTimeout(function() {
-				$('.deselect-all-embeds').removeClass('button-primary');
-			}, 500);
-		});
+			// Désélectionner tous les embeds variations
+			$('.deselect-all-embeds').on('click', function() {
+				$('.variation-toggle').prop('checked', false);
+				updateMasterToggleEmbed();
 
-		// Ajout d'un gestionnaire de soumission du formulaire
-		$('form[action*="admin-post.php"]').on('submit', function() {
-			// Vérifier si toutes les variations sont désélectionnées
-			var allUnchecked = $('.variation-toggle:checked').length === 0;
-			
-			// Si toutes sont désélectionnées, s'assurer que le champ caché est bien présent
-			if (allUnchecked) {
-				// Vérifier si le champ embed_variations_submitted existe déjà
-				if ($(this).find('input[name="embed_variations_submitted"]').length === 0) {
-					$(this).append('<input type="hidden" name="embed_variations_submitted" value="1">');
+				// Mettre à jour l'état visuel du bloc embed principal
+				$('.embed-description .embed-status-notice').removeClass('notice-info').addClass('notice-warning')
+					.html('<strong>Attention:</strong> Le bloc embed principal est désactivé, mais reste fonctionnel en arrière-plan.');
+				$('#embed_master_status').val('0');
+
+				// Visual feedback
+				$(this).addClass('button-primary').fadeOut(100).fadeIn(100);
+				setTimeout(function() {
+					$('.deselect-all-embeds').removeClass('button-primary');
+				}, 500);
+			});
+
+			// Ajout d'un gestionnaire de soumission du formulaire
+			$('form[action*="admin-post.php"]').on('submit', function() {
+				// Vérifier si toutes les variations sont désélectionnées
+				var allUnchecked = $('.variation-toggle:checked').length === 0;
+
+				// Si toutes sont désélectionnées, s'assurer que le champ caché est bien présent
+				if (allUnchecked) {
+					// Vérifier si le champ embed_variations_submitted existe déjà
+					if ($(this).find('input[name="embed_variations_submitted"]').length === 0) {
+						$(this).append('<input type="hidden" name="embed_variations_submitted" value="1">');
+					}
+
+					// Assurons-nous que la valeur est bien définie
+					$(this).find('input[name="embed_variations_submitted"]').val('1');
 				}
-				
-				// Assurons-nous que la valeur est bien définie
-				$(this).find('input[name="embed_variations_submitted"]').val('1');
-			}
-			
-			// Permettre au formulaire de continuer
-			return true;
-		});
 
-		// Filtre des embeds
-		$('#embed-filter').on('keyup', function() {
-			var value = $(this).val().toLowerCase();
-			$('.embed-item').filter(function() {
-				var text = $(this).text().toLowerCase();
-				$(this).toggle(text.indexOf(value) > -1);
+				// Permettre au formulaire de continuer
+				return true;
 			});
-		});
-		
-		// Changer la vue des embeds
-		$('.view-grid').on('click', function() {
-			$(this).addClass('active');
-			$('.view-list').removeClass('active');
-			$('.embed-grid').removeClass('view-mode-list').addClass('view-mode-grid');
-		});
-		
-		$('.view-list').on('click', function() {
-			$(this).addClass('active');
-			$('.view-grid').removeClass('active');
-			$('.embed-grid').removeClass('view-mode-grid').addClass('view-mode-list');
-		});
 
-		// Global blocks search functionality
-		$('#global-blocks-filter').on('keyup', function() {
-			var searchTerm = $(this).val().toLowerCase();
-			var totalResults = 0;
-			var resultsInCategory = {};
-			
-			// Reset visibility of all sections and rows
-			$('.category-section').removeClass('no-results active');
-			$('.category-content').hide();
-			$('.category-content tr').removeClass('hidden-row');
-			$('.embed-item').show();
-			
-			// Remove any existing highlight
-			$('.block-title-text, .embed-title').each(function() {
-				$(this).text($(this).data('original-text') || $(this).text());
+			// Filtre des embeds
+			$('#embed-filter').on('keyup', function() {
+				var value = $(this).val().toLowerCase();
+				$('.embed-item').filter(function() {
+					var text = $(this).text().toLowerCase();
+					$(this).toggle(text.indexOf(value) > -1);
+				});
 			});
-			
-			// If search is empty, just show collapsed categories
-			if (searchTerm === '') {
-				$('#search-results-count').text('');
-				return;
-			}
-			
-			// Search in regular blocks
-			$('.category-content tr').each(function() {
-				var blockTitle = $(this).find('td:first-child').text().toLowerCase();
-				var category = $(this).closest('.category-section').find('.category-title').text().trim();
-				
-				if (blockTitle.indexOf(searchTerm) > -1) {
-					var $categorySection = $(this).closest('.category-section');
-					$categorySection.addClass('active');
-					$categorySection.find('.category-content').show();
-					
-					// Highlight the matching text
-					var $titleCell = $(this).find('td:first-child');
-					var originalText = $titleCell.find('.block-title-text').data('original-text') || $titleCell.find('.block-title-text').text();
-					var highlightedText = originalText.replace(
-						new RegExp('(' + searchTerm + ')', 'gi'), 
-						'<span class="highlight-result">$1</span>'
-					);
-					
-					// Store original text if not already stored
-					if (!$titleCell.find('.block-title-text').data('original-text')) {
-						$titleCell.find('.block-title-text').data('original-text', originalText);
-					}
-					
-					$titleCell.find('.block-title-text').html(highlightedText);
-					
-					totalResults++;
-					
-					// Track results per category
-					if (!resultsInCategory[category]) {
-						resultsInCategory[category] = 0;
-					}
-					resultsInCategory[category]++;
-				} else {
-					$(this).addClass('hidden-row');
+
+			// Changer la vue des embeds
+			$('.view-grid').on('click', function() {
+				$(this).addClass('active');
+				$('.view-list').removeClass('active');
+				$('.embed-grid').removeClass('view-mode-list').addClass('view-mode-grid');
+			});
+
+			$('.view-list').on('click', function() {
+				$(this).addClass('active');
+				$('.view-grid').removeClass('active');
+				$('.embed-grid').removeClass('view-mode-grid').addClass('view-mode-list');
+			});
+
+			// Global blocks search functionality
+			$('#global-blocks-filter').on('keyup', function() {
+				var searchTerm = $(this).val().toLowerCase();
+				var totalResults = 0;
+				var resultsInCategory = {};
+
+				// Reset visibility of all sections and rows
+				$('.category-section').removeClass('no-results active');
+				$('.category-content').hide();
+				$('.category-content tr').removeClass('hidden-row');
+				$('.embed-item').show();
+
+				// Remove any existing highlight
+				$('.block-title-text, .embed-title').each(function() {
+					$(this).text($(this).data('original-text') || $(this).text());
+				});
+
+				// If search is empty, just show collapsed categories
+				if (searchTerm === '') {
+					$('#search-results-count').text('');
+					return;
 				}
-			});
-			
-			// Search in embed variations
-			$('.embed-item').each(function() {
-				var embedTitle = $(this).find('.embed-title').text().toLowerCase();
-				var embedDesc = $(this).find('.embed-description').text().toLowerCase();
-				var category = 'Embeds';
-				
-				if (embedTitle.indexOf(searchTerm) > -1 || embedDesc.indexOf(searchTerm) > -1) {
-					var $categorySection = $(this).closest('.category-section');
-					$categorySection.addClass('active');
-					$categorySection.find('.category-content').show();
-					
-					// Highlight the matching text in title
-					var $titleElement = $(this).find('.embed-title');
-					var originalText = $titleElement.data('original-text') || $titleElement.text();
-					
-					// Store original text if not already stored
-					if (!$titleElement.data('original-text')) {
-						$titleElement.data('original-text', originalText);
-					}
-					
-					if (embedTitle.indexOf(searchTerm) > -1) {
+
+				// Search in regular blocks
+				$('.category-content tr').each(function() {
+					var blockTitle = $(this).find('td:first-child').text().toLowerCase();
+					var category = $(this).closest('.category-section').find('.category-title').text().trim();
+
+					if (blockTitle.indexOf(searchTerm) > -1) {
+						var $categorySection = $(this).closest('.category-section');
+						$categorySection.addClass('active');
+						$categorySection.find('.category-content').show();
+
+						// Highlight the matching text
+						var $titleCell = $(this).find('td:first-child');
+						var originalText = $titleCell.find('.block-title-text').data('original-text') || $titleCell.find('.block-title-text').text();
 						var highlightedText = originalText.replace(
-							new RegExp('(' + searchTerm + ')', 'gi'), 
+							new RegExp('(' + searchTerm + ')', 'gi'),
 							'<span class="highlight-result">$1</span>'
 						);
-						$titleElement.html(highlightedText);
+
+						// Store original text if not already stored
+						if (!$titleCell.find('.block-title-text').data('original-text')) {
+							$titleCell.find('.block-title-text').data('original-text', originalText);
+						}
+
+						$titleCell.find('.block-title-text').html(highlightedText);
+
+						totalResults++;
+
+						// Track results per category
+						if (!resultsInCategory[category]) {
+							resultsInCategory[category] = 0;
+						}
+						resultsInCategory[category]++;
+					} else {
+						$(this).addClass('hidden-row');
 					}
-					
-					totalResults++;
-					
-					// Track results per category
-					if (!resultsInCategory[category]) {
-						resultsInCategory[category] = 0;
+				});
+
+				// Search in embed variations
+				$('.embed-item').each(function() {
+					var embedTitle = $(this).find('.embed-title').text().toLowerCase();
+					var embedDesc = $(this).find('.embed-description').text().toLowerCase();
+					var category = 'Embeds';
+
+					if (embedTitle.indexOf(searchTerm) > -1 || embedDesc.indexOf(searchTerm) > -1) {
+						var $categorySection = $(this).closest('.category-section');
+						$categorySection.addClass('active');
+						$categorySection.find('.category-content').show();
+
+						// Highlight the matching text in title
+						var $titleElement = $(this).find('.embed-title');
+						var originalText = $titleElement.data('original-text') || $titleElement.text();
+
+						// Store original text if not already stored
+						if (!$titleElement.data('original-text')) {
+							$titleElement.data('original-text', originalText);
+						}
+
+						if (embedTitle.indexOf(searchTerm) > -1) {
+							var highlightedText = originalText.replace(
+								new RegExp('(' + searchTerm + ')', 'gi'),
+								'<span class="highlight-result">$1</span>'
+							);
+							$titleElement.html(highlightedText);
+						}
+
+						totalResults++;
+
+						// Track results per category
+						if (!resultsInCategory[category]) {
+							resultsInCategory[category] = 0;
+						}
+						resultsInCategory[category]++;
+					} else {
+						$(this).hide();
 					}
-					resultsInCategory[category]++;
+				});
+
+				// Hide categories with no results
+				$('.category-section').each(function() {
+					var category = $(this).find('.category-title').text().trim();
+					var hasVisibleBlocks = false;
+
+					// Check for normal blocks
+					if ($(this).find('tr:not(.hidden-row)').length > 0) {
+						hasVisibleBlocks = true;
+					}
+
+					// Check for visible embed variations
+					if ($(this).find('.embed-item:visible').length > 0) {
+						hasVisibleBlocks = true;
+					}
+
+					if (!hasVisibleBlocks) {
+						$(this).addClass('no-results');
+					}
+				});
+
+				// Update search results count
+				if (totalResults === 0) {
+					$('#search-results-count').text('Aucun résultat trouvé');
 				} else {
-					$(this).hide();
+					var resultText = totalResults === 1 ? 'résultat trouvé' : 'résultats trouvés';
+					var categoryBreakdown = Object.keys(resultsInCategory).map(function(cat) {
+						return cat.replace(/[^a-zA-Z0-9]+/g, '') + ': ' + resultsInCategory[cat];
+					}).join(', ');
+
+					$('#search-results-count').text(totalResults + ' ' + resultText + ' (' + categoryBreakdown + ')');
 				}
 			});
-			
-			// Hide categories with no results
-			$('.category-section').each(function() {
-				var category = $(this).find('.category-title').text().trim();
-				var hasVisibleBlocks = false;
-				
-				// Check for normal blocks
-				if ($(this).find('tr:not(.hidden-row)').length > 0) {
-					hasVisibleBlocks = true;
-				}
-				
-				// Check for visible embed variations
-				if ($(this).find('.embed-item:visible').length > 0) {
-					hasVisibleBlocks = true;
-				}
-				
-				if (!hasVisibleBlocks) {
-					$(this).addClass('no-results');
-				}
-			});
-			
-			// Update search results count
-			if (totalResults === 0) {
-				$('#search-results-count').text('Aucun résultat trouvé');
-			} else {
-				var resultText = totalResults === 1 ? 'résultat trouvé' : 'résultats trouvés';
-				var categoryBreakdown = Object.keys(resultsInCategory).map(function(cat) {
-					return cat.replace(/[^a-zA-Z0-9]+/g, '') + ': ' + resultsInCategory[cat];
-				}).join(', ');
-				
-				$('#search-results-count').text(totalResults + ' ' + resultText + ' (' + categoryBreakdown + ')');
-			}
 		});
-	});
 	</script>
-	<?php
-} 
+<?php
+}
+
+// shit not working 
+// Render block styles admin page
+function s4_blocks_render_styles_page()
+{
+	// Only allow admin users
+	if (!current_user_can('manage_options')) {
+		wp_die('Accès refusé');
+	}
+
+	$theme_json_handler = new S4_Theme_JSON_Handler();
+
+	// Check if theme.json exists and is writable
+	$theme_json_path = get_stylesheet_directory() . '/theme.json';
+	$theme_json_exists = file_exists($theme_json_path);
+	$theme_json_writable = is_writable(get_stylesheet_directory()) || (file_exists($theme_json_path) && is_writable($theme_json_path));
+
+	// Get all registered blocks for the dropdown
+	$registry = WP_Block_Type_Registry::get_instance();
+	$all_blocks = $registry->get_all_registered();
+
+	// Get existing styles
+	$all_styles = $theme_json_handler->get_all_block_styles();
+
+	// Success message
+	$success_message = '';
+	if (isset($_GET['updated']) && $_GET['updated'] === 'true') {
+		$success_message = 'Les styles ont été mis à jour avec succès.';
+	}
+?>
+	<div class="wrap">
+		<h1>Gestion des styles de blocs</h1>
+
+		<?php if ($success_message): ?>
+			<div class="notice notice-success is-dismissible">
+				<p><?php echo esc_html($success_message); ?></p>
+			</div>
+		<?php endif; ?>
+
+		<?php if (!$theme_json_exists || !$theme_json_writable): ?>
+			<div class="notice notice-warning">
+				<p>
+					<?php
+					if (!$theme_json_exists) {
+						echo 'Le fichier theme.json n\'existe pas encore. Il sera créé automatiquement lorsque vous ajouterez un style.';
+					} elseif (!$theme_json_writable) {
+						echo 'Le fichier theme.json n\'est pas modifiable. Veuillez vérifier les permissions du fichier.';
+					}
+					?>
+				</p>
+			</div>
+		<?php endif; ?>
+
+		<div class="s4-styles-management">
+			<div class="s4-styles-tabs">
+				<button class="s4-tab-button active" data-tab="add-style">Ajouter un style</button>
+				<button class="s4-tab-button" data-tab="manage-styles">Gérer les styles existants</button>
+			</div>
+
+			<div class="s4-tab-content" id="add-style-tab">
+				<h2>Ajouter un nouveau style de bloc</h2>
+
+				<form action="<?php echo esc_url(admin_url('admin-post.php')); ?>" method="post" id="s4-add-style-form">
+					<input type="hidden" name="action" value="s4_save_block_style">
+					<?php wp_nonce_field('s4_block_style_nonce'); ?>
+
+					<table class="form-table">
+						<tr>
+							<th scope="row"><label for="s4-block-selector">Bloc</label></th>
+							<td>
+								<select id="s4-block-selector" name="block_name" required>
+									<option value="">-- Sélectionner un bloc --</option>
+									<?php
+									foreach ($all_blocks as $block_name => $block) {
+										$block_title = isset($block->title) ? $block->title : $block_name;
+										echo '<option value="' . esc_attr($block_name) . '">' . esc_html($block_title) . ' (' . esc_html($block_name) . ')</option>';
+									}
+									?>
+								</select>
+								<p class="description">Sélectionnez le bloc pour lequel vous souhaitez créer un style.</p>
+							</td>
+						</tr>
+						<tr>
+							<th scope="row"><label for="s4-style-name">Nom du style</label></th>
+							<td>
+								<input type="text" id="s4-style-name" name="style_name" required class="regular-text" placeholder="ex: Style spécial">
+								<p class="description">Ce nom sera affiché dans l'éditeur de blocs.</p>
+							</td>
+						</tr>
+						<tr>
+							<th scope="row"><label for="s4-style-css">CSS</label></th>
+							<td>
+								<textarea id="s4-style-css" name="style_css" rows="6" class="large-text code" placeholder="color: red; font-weight: bold; background-color: #f5f5f5; padding: 20px; border-radius: 8px;" required></textarea>
+								<p class="description">Entrez les propriétés CSS pour ce style (sans les accolades { }).</p>
+							</td>
+						</tr>
+						<tr>
+							<th scope="row">Style par défaut</th>
+							<td>
+								<label>
+									<input type="checkbox" name="is_default" value="1">
+									Définir comme style par défaut pour ce bloc
+								</label>
+								<p class="description">Si activé, ce style sera appliqué automatiquement aux nouveaux blocs de ce type.</p>
+							</td>
+						</tr>
+					</table>
+
+					<p class="submit">
+						<input type="submit" name="submit" id="submit" class="button button-primary" value="Ajouter le style">
+					</p>
+				</form>
+			</div>
+
+			<div class="s4-tab-content" id="manage-styles-tab" style="display: none;">
+				<h2>Styles existants</h2>
+
+				<?php if (empty($all_styles)): ?>
+					<p>Aucun style personnalisé n'a été créé.</p>
+				<?php else: ?>
+					<div class="s4-styles-grid">
+						<?php foreach ($all_styles as $block_name => $styles):
+							$block = isset($all_blocks[$block_name]) ? $all_blocks[$block_name] : null;
+							$block_title = $block ? $block->title : $block_name;
+						?>
+							<div class="s4-block-styles-container">
+								<h3><?php echo esc_html($block_title); ?> <code><?php echo esc_html($block_name); ?></code></h3>
+								<div class="s4-styles-list">
+									<?php foreach ($styles as $style_id => $style): ?>
+										<div class="s4-style-card">
+											<div class="s4-style-header">
+												<h4 class="s4-style-name"><?php echo esc_html($style['label']); ?></h4>
+												<?php if (isset($style['isDefault']) && $style['isDefault']): ?>
+													<span class="s4-default-badge">Par défaut</span>
+												<?php endif; ?>
+											</div>
+
+											<div class="s4-style-preview" style="<?php echo esc_attr($style['css']); ?>">
+												Aperçu du style
+											</div>
+
+											<div class="s4-style-meta">
+												<code class="s4-style-css"><?php echo esc_html($style['css']); ?></code>
+											</div>
+
+											<div class="s4-style-actions">
+												<form action="<?php echo esc_url(admin_url('admin-post.php')); ?>" method="post" class="s4-delete-style-form">
+													<input type="hidden" name="action" value="s4_delete_block_style">
+													<input type="hidden" name="block_name" value="<?php echo esc_attr($block_name); ?>">
+													<input type="hidden" name="style_name" value="<?php echo esc_attr($style_id); ?>">
+													<?php wp_nonce_field('s4_block_style_delete_nonce'); ?>
+													<button type="submit" class="button button-link-delete" onclick="return confirm('Êtes-vous sûr de vouloir supprimer ce style?')">Supprimer</button>
+												</form>
+											</div>
+										</div>
+									<?php endforeach; ?>
+								</div>
+							</div>
+						<?php endforeach; ?>
+					</div>
+				<?php endif; ?>
+			</div>
+		</div>
+	</div>
+
+	<style>
+		.s4-styles-tabs {
+			margin: 20px 0;
+			padding-bottom: 10px;
+			border-bottom: 1px solid #ccc;
+		}
+
+		.s4-tab-button {
+			background: #f1f1f1;
+			border: 1px solid #ccc;
+			padding: 8px 16px;
+			cursor: pointer;
+			margin-right: 5px;
+		}
+
+		.s4-tab-button.active {
+			background: #fff;
+			border-bottom-color: #fff;
+			position: relative;
+			bottom: -1px;
+		}
+
+		.s4-styles-grid {
+			display: grid;
+			grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+			gap: 20px;
+		}
+
+		.s4-block-styles-container {
+			border: 1px solid #e2e4e7;
+			border-radius: 4px;
+			padding: 15px;
+			background: #fff;
+		}
+
+		.s4-style-card {
+			margin-bottom: 20px;
+			padding: 15px;
+			background: #f9f9f9;
+			border-radius: 4px;
+			position: relative;
+		}
+
+		.s4-style-header {
+			display: flex;
+			justify-content: space-between;
+			align-items: center;
+		}
+
+		.s4-style-name {
+			margin: 0 0 10px 0;
+		}
+
+		.s4-default-badge {
+			background: #007cba;
+			color: #fff;
+			padding: 3px 8px;
+			border-radius: 3px;
+			font-size: 11px;
+		}
+
+		.s4-style-preview {
+			padding: 20px;
+			margin: 10px 0;
+			background: #fff;
+			border: 1px dashed #ddd;
+			text-align: center;
+		}
+
+		.s4-style-css {
+			display: block;
+			background: #f0f0f0;
+			padding: 10px;
+			margin: 10px 0;
+			overflow-x: auto;
+			font-size: 12px;
+		}
+
+		.s4-style-actions {
+			text-align: right;
+		}
+
+		/* Ensure form elements have proper spacing */
+		.form-table th {
+			width: 200px;
+		}
+
+		#s4-style-css {
+			font-family: monospace;
+		}
+	</style>
+
+	<script>
+		jQuery(document).ready(function($) {
+			// Tab switching
+			$('.s4-tab-button').on('click', function() {
+				var tabId = $(this).data('tab');
+
+				// Update active tab
+				$('.s4-tab-button').removeClass('active');
+				$(this).addClass('active');
+
+				// Show selected tab content, hide others
+				$('.s4-tab-content').hide();
+				$('#' + tabId + '-tab').show();
+			});
+		});
+	</script>
+<?php
+}
+
+// Handler for saving a block style
+function s4_save_block_style()
+{
+	// Verify permissions and nonce
+	if (!current_user_can('manage_options') || !isset($_POST['_wpnonce']) || !wp_verify_nonce($_POST['_wpnonce'], 's4_block_style_nonce')) {
+		wp_die('Accès refusé');
+	}
+
+	$block_name = sanitize_text_field($_POST['block_name']);
+	$style_name = sanitize_text_field($_POST['style_name']);
+	$style_css = sanitize_textarea_field($_POST['style_css']);
+	$is_default = isset($_POST['is_default']) && $_POST['is_default'] == '1';
+
+	// Create style properties array
+	$style_properties = [
+		'label' => $style_name,
+		'css' => $style_css,
+		'isDefault' => $is_default
+	];
+
+	// Save style using the handler
+	$theme_json_handler = new S4_Theme_JSON_Handler();
+	$result = $theme_json_handler->add_block_style($block_name, sanitize_title($style_name), $style_properties);
+
+	// Redirect back to the styles page with a success message
+	wp_redirect(add_query_arg([
+		'page' => 's4-block-styles',
+		'updated' => 'true'
+	], admin_url('admin.php')));
+	exit;
+}
+add_action('admin_post_s4_save_block_style', 's4_save_block_style');
+
+// Handler for deleting a block style
+function s4_delete_block_style()
+{
+	// Verify permissions and nonce
+	if (!current_user_can('manage_options') || !isset($_POST['_wpnonce']) || !wp_verify_nonce($_POST['_wpnonce'], 's4_block_style_delete_nonce')) {
+		wp_die('Accès refusé');
+	}
+
+	$block_name = sanitize_text_field($_POST['block_name']);
+	$style_name = sanitize_text_field($_POST['style_name']);
+
+	// Delete the style
+	$theme_json_handler = new S4_Theme_JSON_Handler();
+	$result = $theme_json_handler->remove_block_style($block_name, $style_name);
+
+	// Redirect back to the styles page
+	wp_redirect(add_query_arg([
+		'page' => 's4-block-styles',
+		'updated' => 'true'
+	], admin_url('admin.php')));
+	exit;
+}
+add_action('admin_post_s4_delete_block_style', 's4_delete_block_style');
+
+// Restrict non-admin users from modifying S4 block styles
+function s4_restrict_block_styles_for_non_admins($editor_settings, $editor_context)
+{
+	// Only apply restrictions for non-admin users
+	if (!current_user_can('administrator')) {
+		if (isset($editor_settings['styles'])) {
+			// Make custom styles read-only for non-admin users
+			$editor_settings['__experimentalFeatures']['blocks']['__experimentalDisableCustomStyles'] = true;
+		}
+	}
+	return $editor_settings;
+}
+add_filter('block_editor_settings_all', 's4_restrict_block_styles_for_non_admins', 10, 2);
